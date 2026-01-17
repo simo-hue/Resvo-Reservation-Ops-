@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { Reservation, ServiceType } from '@/types';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { DayCell } from './day-cell';
 import { formatDate, getNumberOfDaysInMonth, getFirstDayOfMonth, goToNextMonth, goToPreviousMonth, createDate } from '@/lib/utils/date-utils';
 
@@ -71,68 +72,63 @@ export function CalendarView({
     };
 
     return (
-        <div className="bg-card rounded-lg border border-border p-6">
-            {/* Calendar header */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold capitalize">
-                    {formatDate(currentMonth, 'MMMM yyyy')}
-                </h2>
-
-                <div className="flex items-center gap-2">
+        <div className="space-y-4">
+            {/* Calendar Header with Navigation */}
+            <div className="bg-card rounded-lg border border-border p-4">
+                <div className="flex items-center justify-between">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         onClick={handlePreviousMonth}
+                        className="h-10 w-10"
                     >
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronLeft className="h-5 w-5" />
                     </Button>
 
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setCurrentMonth(new Date());
-                            setSelectedDate(null);
-                        }}
-                    >
-                        Oggi
-                    </Button>
+                    <h2 className="text-2xl sm:text-3xl font-bold capitalize">
+                        {formatDate(currentMonth, 'MMMM yyyy')}
+                    </h2>
 
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         onClick={handleNextMonth}
+                        className="h-10 w-10"
                     >
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-5 w-5" />
                     </Button>
                 </div>
             </div>
 
-            {/* Days of week header */}
-            <div className="grid grid-cols-7 gap-2 mb-2">
-                {DAYS_OF_WEEK.map((day) => (
-                    <div
-                        key={day}
-                        className="text-center text-sm font-semibold text-muted-foreground py-2"
-                    >
-                        {day}
-                    </div>
-                ))}
-            </div>
+            {/* Calendar Grid */}
+            <div className="bg-card rounded-lg border border-border p-4 sm:p-6">
+                {/* Days of week header */}
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                        <div
+                            key={day}
+                            className="text-center text-sm font-semibold text-muted-foreground py-2"
+                        >
+                            {day}
+                        </div>
+                    ))}
+                </div>
 
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
-                {days.map((date, index) => (
-                    <DayCell
-                        key={index}
-                        date={date!}
-                        currentMonth={date!.getMonth() === month}
-                        reservations={reservations}
-                        selectedService={selectedService}
-                        maxCapacity={maxCapacity}
-                        selectedDate={selectedDate}
-                        onClick={() => handleDayClick(date!)}
-                    />
-                ))}
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-2">
+                    {days.map((date, index) => (
+                        <DayCell
+                            key={index}
+                            date={date!}
+                            currentMonth={date!.getMonth() === month}
+                            reservations={reservations}
+                            selectedService={selectedService}
+                            maxCapacity={maxCapacity}
+                            selectedDate={selectedDate}
+                            onClick={() => handleDayClick(date!)}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );

@@ -77,3 +77,27 @@ export function calculateDailyStats(
         },
     };
 }
+
+/**
+ * Get capacity status based on guests and max capacity
+ */
+export function getCapacityStatus(
+    totalGuests: number,
+    maxCapacity: number
+): CapacityStatus {
+    const percentage = maxCapacity > 0 ? (totalGuests / maxCapacity) * 100 : 0;
+
+    let color: 'green' | 'yellow' | 'red' = 'green';
+    if (percentage >= CAPACITY_THRESHOLDS.YELLOW) {
+        color = 'red';
+    } else if (percentage >= CAPACITY_THRESHOLDS.GREEN) {
+        color = 'yellow';
+    }
+
+    return {
+        available: Math.max(0, maxCapacity - totalGuests),
+        total: maxCapacity,
+        percentage: Math.round(percentage),
+        color,
+    };
+}
