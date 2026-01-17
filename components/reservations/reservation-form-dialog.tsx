@@ -1,0 +1,306 @@
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { reservationSchema, type ReservationFormData } from '@/lib/utils/validators';
+import { Reservation, ServiceType } from '@/types';
+import { mockTables } from '@/lib/mock-data';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
+import { CalendarIcon, Save } from 'lucide-react';
+import { formatDate } from '@/lib/utils/date-utils';
+import { cn } from '@/lib/utils';
+import { DEFAULT_TIME_SLOTS } from '@/lib/constants';
+
+interface ReservationFormDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    reservation?: Reservation | null;
+    onSave: (data: Partial<Reservation>) => void;
+}
+
+export function ReservationFormDialog({
+    open,
+    onOpenChange,
+    reservation,
+    onSave
+}: ReservationFormDialogProps) {
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+        reservation ? new Date(reservation.date) : new Date()
+    );
+    const [selectedService, setSelectedService] = useState<ServiceType>(
+        reservation?.serviceType || 'dinner'
+    );
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        formState: { errors },
+        reset,
+    } = useForm<ReservationFormData>({
+        resolver: zodResolver(reservationSchema) as any,
+        defaultValues: reservation ? {
+            customerName: reservation.customerName,
+            customerPhone: reservation.customerPhone,
+            customerEmail: reservation.customerEmail || '',
+            date: new Date(reservation.date),
+            time: reservation.time,
+            serviceType: reservation.serviceType,
+            numGuests: reservation.numGuests,
+            tableId: reservation.tableId,
+            notes: reservation.notes || '',
+            specialRequests: reservation.specialRequests || '',
+            status: reservation.status,
+        } : {
+            customerName: '',
+            customerPhone: '',
+            customerEmail: '',
+            date: new Date(),
+            time: '',
+            serviceType: 'dinner',
+            numGuests: 2,
+            tableId: '',
+            notes: '',
+            specialRequests: '',
+            status: 'confirmed',
+        },
+    });
+
+    const onSubmit = async (data: ReservationFormData) => {
+        const reservationData = {
+            ...data,
+            date: selectedDate!,
+            serviceType: selectedService,
+            id: reservation?.id || `res-${Date.now()}`,
+            restaurantId: 'restaurant-1',
+            createdAt: reservation?.createdAt || new Date(),
+            updatedAt: new Date(),
+        };
+
+        onSave(reservationData);
+        toast.success(reservation ? 'Prenotazione aggiornata!' : 'Prenotazione creata!');
+        onOpenChange(false);
+        reset();
+    };
+
+    const timeSlots = selectedService === 'lunch'
+        ? DEFAULT_TIME_SLOTS.LUNCH
+        : DEFAULT_TIME_SLOTS.DINNER;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>
+                        {reservation ? 'Modifica Prenotazione' : 'Nuova Prenotazione'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Inserisci i dettagli della prenotazione
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    {/* Customer Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="customerName">Nome Cliente *</Label>
+                            <Input
+                                id="customerName"
+                                {...register('customerName')}
+                                placeholder="Mario Rossi"
+                            />
+                            {errors.customerName && (
+                                <p className="text-sm text-destructive">{errors.customerName.message}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="customerPhone">Telefono *</Label>
+                            <Input
+                                id="customerPhone"
+                                {...register('customerPhone')}
+                                placeholder="3331234567"
+                            />
+                            {errors.customerPhone && (
+                                <p className="text-sm text-destructive">{errors.customerPhone.message}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="customerEmail">Email (opzionale)</Label>
+                        <Input
+                            id="customerEmail"
+                            type="email"
+                            {...register('customerEmail')}
+                            placeholder="mario.rossi@email.it"
+                        />
+                        {errors.customerEmail && (
+                            <p className="text-sm text-destructive">{errors.customerEmail.message}</p>
+                        )}
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label>Data *</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            'w-full justify-start text-left font-normal',
+                                            !selectedDate && 'text-muted-foreground'
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {selectedDate ? formatDate(selectedDate, 'dd/MM/yyyy') : 'Seleziona data'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={selectedDate}
+                                        onSelect={(date) => {
+                                            setSelectedDate(date);
+                                            setValue('date', date!);
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="serviceType">Servizio *</Label>
+                            <Select
+                                value={selectedService}
+                                onValueChange={(value) => {
+                                    setSelectedService(value as ServiceType);
+                                    setValue('serviceType', value as ServiceType);
+                                    setValue('time', ''); // Reset time when service changes
+                                }}
+                            >
+                                <SelectTrigger id="serviceType">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="lunch">Pranzo</SelectItem>
+                                    <SelectItem value="dinner">Cena</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="time">Orario *</Label>
+                            <Select onValueChange={(value) => setValue('time', value)}>
+                                <SelectTrigger id="time">
+                                    <SelectValue placeholder="Seleziona orario" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map((slot) => (
+                                        <SelectItem key={slot} value={slot}>
+                                            {slot}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.time && (
+                                <p className="text-sm text-destructive">{errors.time.message}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Guests & Table */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="numGuests">Numero Ospiti *</Label>
+                            <Input
+                                id="numGuests"
+                                type="number"
+                                {...register('numGuests', { valueAsNumber: true })}
+                                placeholder="2"
+                            />
+                            {errors.numGuests && (
+                                <p className="text-sm text-destructive">{errors.numGuests.message}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="tableId">Tavolo (opzionale)</Label>
+                            <Select onValueChange={(value) => setValue('tableId', value)}>
+                                <SelectTrigger id="tableId">
+                                    <SelectValue placeholder="Assegna dopo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {mockTables.map((table) => (
+                                        <SelectItem key={table.id} value={table.id}>
+                                            Tavolo {table.tableNumber} ({table.capacity} posti - {table.position})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Stato</Label>
+                        <Select
+                            defaultValue={reservation?.status || 'confirmed'}
+                            onValueChange={(value) => setValue('status', value as any)}
+                        >
+                            <SelectTrigger id="status">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="confirmed">Confermata</SelectItem>
+                                <SelectItem value="pending">In Attesa</SelectItem>
+                                <SelectItem value="cancelled">Cancellata</SelectItem>
+                                <SelectItem value="completed">Completata</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="space-y-2">
+                        <Label htmlFor="notes">Note</Label>
+                        <Input
+                            id="notes"
+                            {...register('notes')}
+                            placeholder="Cliente abituale, preferisce tavolo esterno..."
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="specialRequests">Richieste Speciali</Label>
+                        <Input
+                            id="specialRequests"
+                            {...register('specialRequests')}
+                            placeholder="Intolleranze, seggiolone, torta..."
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            Annulla
+                        </Button>
+                        <Button type="submit">
+                            <Save className="mr-2 h-4 w-4" />
+                            {reservation ? 'Aggiorna' : 'Crea'} Prenotazione
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
