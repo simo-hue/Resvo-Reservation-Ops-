@@ -47,9 +47,9 @@ export default function HomePage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Page header - Mobile optimized */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                 {/* Title */}
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Calendario Prenotazioni</h1>
@@ -122,6 +122,7 @@ export default function HomePage() {
                         selectedService={selectedService}
                         maxCapacity={maxCapacity}
                         onDayClick={handleDayClick}
+                        onAddReservation={handleAddReservation}
                     />
                 )}
             </div>

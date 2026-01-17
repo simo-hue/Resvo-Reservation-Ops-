@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Reservation, ServiceType } from '@/types';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DayCell } from './day-cell';
 import { formatDate, getNumberOfDaysInMonth, getFirstDayOfMonth, goToNextMonth, goToPreviousMonth, createDate } from '@/lib/utils/date-utils';
+import { useSwipe } from '@/lib/hooks/use-swipe';
 
 const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
@@ -25,6 +26,7 @@ export function CalendarView({
 }: CalendarViewProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const calendarRef = useRef<HTMLDivElement>(null);
 
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -71,6 +73,28 @@ export function CalendarView({
         setSelectedDate(null);
     };
 
+    // Swipe gesture support
+    const { handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipe({
+        onSwipeLeft: handleNextMonth,
+        onSwipeRight: handlePreviousMonth,
+        threshold: 50,
+    });
+
+    useEffect(() => {
+        const element = calendarRef.current;
+        if (!element) return;
+
+        element.addEventListener('touchstart', handleTouchStart);
+        element.addEventListener('touchmove', handleTouchMove);
+        element.addEventListener('touchend', handleTouchEnd);
+
+        return () => {
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('touchmove', handleTouchMove);
+            element.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
     return (
         <div className="space-y-4">
             {/* Calendar Header with Navigation */}
@@ -101,13 +125,13 @@ export function CalendarView({
             </div>
 
             {/* Calendar Grid */}
-            <div className="bg-card rounded-lg border border-border p-4 sm:p-6">
+            <div ref={calendarRef} className="bg-card rounded-lg border border-border p-2 sm:p-4 md:p-6 touch-none">
                 {/* Days of week header */}
-                <div className="grid grid-cols-7 gap-2 mb-2">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
                     {DAYS_OF_WEEK.map((day) => (
                         <div
                             key={day}
-                            className="text-center text-sm font-semibold text-muted-foreground py-2"
+                            className="text-center text-[10px] sm:text-xs md:text-sm font-semibold text-muted-foreground py-1 sm:py-2"
                         >
                             {day}
                         </div>
@@ -115,7 +139,7 @@ export function CalendarView({
                 </div>
 
                 {/* Calendar grid */}
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
                     {days.map((date, index) => (
                         <DayCell
                             key={index}

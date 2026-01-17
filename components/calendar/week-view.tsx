@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Reservation, ServiceType, CapacityStatus } from '@/types';
 import { getReservationsForDateAndService, getCapacityStatus } from '@/lib/utils/capacity-calculator';
 import { formatDate } from '@/lib/utils/date-utils';
+import { useSwipe } from '@/lib/hooks/use-swipe';
 
 type ViewType = 'month' | 'week' | 'day';
 
@@ -25,6 +26,7 @@ export function WeekView({
     onDayClick,
 }: WeekViewProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const weekRef = useRef<HTMLDivElement>(null);
 
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -41,6 +43,28 @@ export function WeekView({
     const handleToday = () => {
         setCurrentDate(new Date());
     };
+
+    // Swipe gesture support
+    const { handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipe({
+        onSwipeLeft: handleNextWeek,
+        onSwipeRight: handlePreviousWeek,
+        threshold: 50,
+    });
+
+    useEffect(() => {
+        const element = weekRef.current;
+        if (!element) return;
+
+        element.addEventListener('touchstart', handleTouchStart);
+        element.addEventListener('touchmove', handleTouchMove);
+        element.addEventListener('touchend', handleTouchEnd);
+
+        return () => {
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('touchmove', handleTouchMove);
+            element.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
     const getDayData = (day: Date) => {
         const dayReservations = getReservationsForDateAndService(reservations, day, selectedService);
@@ -110,7 +134,7 @@ export function WeekView({
             </div>
 
             {/* Week Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+            <div ref={weekRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 touch-none">
                 {weekDays.map((day) => {
                     const dayData = getDayData(day);
                     const isToday = isSameDay(day, new Date());

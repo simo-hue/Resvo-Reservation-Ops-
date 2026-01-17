@@ -35,11 +35,14 @@ export function DayCell({
     const percentage = maxCapacity > 0 ? (totalGuests / maxCapacity) * 100 : 0;
 
     // Determine capacity color
-    let capacityColor = 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700';
+    let capacityColor = 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800';
+    let dotColor = 'bg-green-500';
     if (percentage >= 90) {
-        capacityColor = 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700';
+        capacityColor = 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800';
+        dotColor = 'bg-red-500';
     } else if (percentage >= 70) {
-        capacityColor = 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700';
+        capacityColor = 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800';
+        dotColor = 'bg-yellow-500';
     }
 
     const isToday = checkIsToday(date);
@@ -49,51 +52,67 @@ export function DayCell({
         <div
             onClick={currentMonth ? onClick : undefined}
             className={cn(
-                'min-h-[100px] p-2 border border-border rounded-lg transition-all duration-200 relative',
+                // Responsive height: smaller on mobile, larger on desktop
+                'min-h-[56px] sm:min-h-[80px] md:min-h-[100px]',
+                // Responsive padding
+                'p-1.5 sm:p-2 md:p-3',
+                // Border and radius
+                'border rounded-lg',
+                // Transitions
+                'transition-all duration-200',
+                // Conditional states
                 currentMonth
-                    ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] hover:z-10'
-                    : 'opacity-40 cursor-not-allowed',
-                isSelected && 'ring-2 ring-primary shadow-lg',
-                isToday && 'bg-accent/50',
+                    ? 'cursor-pointer active:scale-95 sm:hover:shadow-lg sm:hover:scale-[1.02] sm:hover:z-10 touch-target'
+                    : 'opacity-30 cursor-not-allowed',
+                isSelected && 'ring-2 ring-primary shadow-lg scale-105 z-20',
+                isToday && 'bg-accent/30',
                 currentMonth && capacityColor
             )}
         >
-            {/* Date number */}
-            <div className="flex items-center justify-between mb-2">
-                <span
-                    className={cn(
-                        'text-sm font-medium',
-                        isToday && 'bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center'
-                    )}
-                >
-                    {date.getDate()}
-                </span>
+            <div className="flex flex-col h-full justify-between">
+                {/* Date number and badge - always visible */}
+                <div className="flex items-start justify-between gap-1">
+                    <span
+                        className={cn(
+                            'text-xs sm:text-sm md:text-base font-semibold leading-none',
+                            isToday && 'bg-primary text-primary-foreground rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center text-xs sm:text-sm'
+                        )}
+                    >
+                        {date.getDate()}
+                    </span>
 
-                {/* Reservation count badge */}
+                    {/* Reservation indicator - mobile: dot, desktop: badge */}
+                    {currentMonth && dayReservations.length > 0 && (
+                        <>
+                            {/* Mobile: simple dot */}
+                            <div className={cn('h-2 w-2 rounded-full sm:hidden', dotColor)} />
+                            {/* Desktop: badge with count */}
+                            <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
+                                {dayReservations.length}
+                            </Badge>
+                        </>
+                    )}
+                </div>
+
+                {/* Capacity info - only on larger screens */}
                 {currentMonth && dayReservations.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                        {dayReservations.length}
-                    </Badge>
+                    <div className="hidden sm:block space-y-1">
+                        <div className="text-xs text-muted-foreground">
+                            {totalGuests}/{maxCapacity}
+                        </div>
+                        <div className="w-full bg-background/50 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                className={cn(
+                                    'h-full transition-all duration-300',
+                                    percentage >= 90 ? 'bg-red-500' : percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+                                )}
+                                style={{ width: `${Math.min(percentage, 100)}%` }}
+                            />
+                        </div>
+                    </div>
                 )}
             </div>
-
-            {/* Capacity indicator */}
-            {currentMonth && dayReservations.length > 0 && (
-                <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">
-                        {totalGuests}/{maxCapacity} coperti
-                    </div>
-                    <div className="w-full bg-background/50 rounded-full h-1.5 overflow-hidden">
-                        <div
-                            className={cn(
-                                'h-full transition-all duration-300',
-                                percentage >= 90 ? 'bg-red-500' : percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
-                            )}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
+
