@@ -56,7 +56,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             {/* Current date */}
             <div className="flex-1">
                 {currentDate && (
-                    <p className="text-sm text-muted-foreground capitalize hidden sm:block">
+                    <p
+                        className="text-sm text-muted-foreground capitalize hidden sm:block"
+                        suppressHydrationWarning
+                    >
                         {currentDate}
                     </p>
                 )}

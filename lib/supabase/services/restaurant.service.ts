@@ -12,14 +12,14 @@ export class RestaurantService {
             .eq('user_id', userId)
             .order('created_at', { ascending: true })
             .limit(1)
-            .maybeSingle();
+            .limit(1);
 
         if (error) {
             console.error('Error fetching restaurant:', error);
             return null;
         }
 
-        return this.mapToRestaurant(data);
+        return data && data.length > 0 ? this.mapToRestaurant(data[0]) : null;
     }
 
     /**

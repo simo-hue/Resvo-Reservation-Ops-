@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { restaurantSettingsSchema, type RestaurantSettingsFormData } from '@/lib/utils/validators';
@@ -19,6 +19,7 @@ export function RestaurantSettingsForm() {
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors },
     } = useForm<RestaurantSettingsFormData>({
         resolver: zodResolver(restaurantSettingsSchema),
@@ -27,6 +28,16 @@ export function RestaurantSettingsForm() {
             maxCapacityDinner: restaurant?.maxCapacityDinner || 100,
         },
     });
+
+    // Update form values when restaurant data is loaded
+    useEffect(() => {
+        if (restaurant) {
+            reset({
+                maxCapacityLunch: restaurant.maxCapacityLunch,
+                maxCapacityDinner: restaurant.maxCapacityDinner,
+            });
+        }
+    }, [restaurant, reset]);
 
     const onSubmit = async (data: RestaurantSettingsFormData) => {
         setIsSaving(true);

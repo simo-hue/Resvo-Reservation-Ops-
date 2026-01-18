@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { reservationSchema, type ReservationFormData } from '@/lib/utils/validators';
@@ -43,22 +43,12 @@ export function ReservationFormDialog({
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
         reset,
     } = useForm<ReservationFormData>({
         resolver: zodResolver(reservationSchema) as any,
-        defaultValues: reservation ? {
-            customerName: reservation.customerName,
-            customerPhone: reservation.customerPhone,
-            customerEmail: reservation.customerEmail || '',
-            date: new Date(reservation.date),
-            time: reservation.time,
-            serviceType: reservation.serviceType,
-            numGuests: reservation.numGuests,
-            tableId: reservation.tableId,
-            notes: reservation.notes || '',
-            status: reservation.status,
-        } : {
+        defaultValues: {
             customerName: '',
             customerPhone: '',
             customerEmail: '',
@@ -71,6 +61,47 @@ export function ReservationFormDialog({
             status: 'confirmed',
         },
     });
+
+    const watchedTime = watch('time');
+    const watchedTableId = watch('tableId');
+    const watchedStatus = watch('status');
+
+    useEffect(() => {
+        if (open) {
+            if (reservation) {
+                const date = new Date(reservation.date);
+                setSelectedDate(date);
+                setSelectedService(reservation.serviceType);
+                reset({
+                    customerName: reservation.customerName,
+                    customerPhone: reservation.customerPhone,
+                    customerEmail: reservation.customerEmail || '',
+                    date: date,
+                    time: reservation.time,
+                    serviceType: reservation.serviceType,
+                    numGuests: reservation.numGuests,
+                    tableId: reservation.tableId,
+                    notes: reservation.notes || '',
+                    status: reservation.status,
+                });
+            } else {
+                setSelectedDate(new Date());
+                setSelectedService('dinner');
+                reset({
+                    customerName: '',
+                    customerPhone: '',
+                    customerEmail: '',
+                    date: new Date(),
+                    time: '',
+                    serviceType: 'dinner',
+                    numGuests: 2,
+                    tableId: '',
+                    notes: '',
+                    status: 'confirmed',
+                });
+            }
+        }
+    }, [reservation, open, reset]);
 
     const onSubmit = async (data: ReservationFormData) => {
         const reservationData = {
@@ -199,7 +230,10 @@ export function ReservationFormDialog({
 
                         <div className="space-y-2">
                             <Label htmlFor="time">Orario *</Label>
-                            <Select onValueChange={(value) => setValue('time', value)}>
+                            <Select
+                                value={watchedTime}
+                                onValueChange={(value) => setValue('time', value)}
+                            >
                                 <SelectTrigger id="time">
                                     <SelectValue placeholder="Seleziona orario" />
                                 </SelectTrigger>
@@ -234,7 +268,10 @@ export function ReservationFormDialog({
 
                         <div className="space-y-2">
                             <Label htmlFor="tableId">Tavolo (opzionale)</Label>
-                            <Select onValueChange={(value) => setValue('tableId', value)}>
+                            <Select
+                                value={watchedTableId}
+                                onValueChange={(value) => setValue('tableId', value)}
+                            >
                                 <SelectTrigger id="tableId">
                                     <SelectValue placeholder="Assegna dopo" />
                                 </SelectTrigger>
@@ -253,7 +290,7 @@ export function ReservationFormDialog({
                     <div className="space-y-2">
                         <Label htmlFor="status">Stato</Label>
                         <Select
-                            defaultValue={reservation?.status || 'confirmed'}
+                            value={watchedStatus}
                             onValueChange={(value) => setValue('status', value as any)}
                         >
                             <SelectTrigger id="status">
