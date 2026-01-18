@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { reservationSchema, type ReservationFormData } from '@/lib/utils/validators';
-import { Reservation, ServiceType } from '@/types';
-import { mockTables } from '@/lib/mock-data';
+import { Reservation, ServiceType, Table } from '@/types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +17,8 @@ import { CalendarIcon, Save } from 'lucide-react';
 import { formatDate } from '@/lib/utils/date-utils';
 import { cn } from '@/lib/utils';
 import { DEFAULT_TIME_SLOTS } from '@/lib/constants';
+import { useRestaurantSettings } from '@/lib/contexts/restaurant-settings-context';
+import { tablesService } from '@/lib/supabase/services/tables.service';
 
 interface ReservationFormDialogProps {
     open: boolean;
@@ -32,6 +33,8 @@ export function ReservationFormDialog({
     reservation,
     onSave
 }: ReservationFormDialogProps) {
+    const { restaurant } = useRestaurantSettings();
+    const [tables, setTables] = useState<Table[]>([]);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         reservation ? new Date(reservation.date) : new Date()
     );
@@ -65,6 +68,22 @@ export function ReservationFormDialog({
     const watchedTime = watch('time');
     const watchedTableId = watch('tableId');
     const watchedStatus = watch('status');
+
+    // Fetch tables
+    useEffect(() => {
+        const fetchTables = async () => {
+            if (restaurant?.id) {
+                try {
+                    const data = await tablesService.getTables(restaurant.id);
+                    setTables(data);
+                } catch (error) {
+                    console.error('Error loading tables:', error);
+                    toast.error('Errore nel caricamento dei tavoli');
+                }
+            }
+        };
+        fetchTables();
+    }, [restaurant, open]);
 
     useEffect(() => {
         if (open) {
@@ -109,13 +128,13 @@ export function ReservationFormDialog({
             date: selectedDate!,
             serviceType: selectedService,
             id: reservation?.id,
-            restaurantId: 'restaurant-1',
+            restaurantId: restaurant?.id || 'restaurant-1',
             createdAt: reservation?.createdAt || new Date(),
             updatedAt: new Date(),
         };
 
         onSave(reservationData);
-        toast.success(reservation ? 'Prenotazione aggiornata!' : 'Prenotazione creata!');
+        // toast.success(reservation ? 'Prenotazione aggiornata!' : 'Prenotazione creata!'); // Handled by parent
         onOpenChange(false);
         reset();
     };
@@ -276,11 +295,17 @@ export function ReservationFormDialog({
                                     <SelectValue placeholder="Assegna dopo" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {mockTables.map((table) => (
-                                        <SelectItem key={table.id} value={table.id}>
-                                            Tavolo {table.tableNumber} ({table.capacity} posti - {table.position})
-                                        </SelectItem>
-                                    ))}
+                                    {tables.length > 0 ? (
+                                        tables.map((table) => (
+                                            <SelectItem key={table.id} value={table.id}>
+                                                Tavolo {table.tableNumber} ({table.capacity} posti - {table.position})
+                                            </SelectItem>
+                                        ))
+                                    ) : (
+                                        <div className="p-2 text-sm text-muted-foreground text-center">
+                                            Nessun tavolo disponibile
+                                        </div>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>

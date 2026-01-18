@@ -169,14 +169,31 @@
 
 ---
 
-### ⏳ FASE 5: Prenotazioni (IN SVILUPPO)
+### ✅ FASE 4: Reservations Service (COMPLETATA)
 
-_Test disponibili dopo implementazione..._
+**Prerequisito**: Avere il database Supabase collegato.
+
+#### Test 4.1: Verifica Service
+**Passi:**
+1. Il servizio `reservations.service.ts` è attivo e integrato.
+2. Le chiamate CRUD (Create, Read, Update, Delete) sono funzionanti.
 
 ---
 
-### ⏳ FASE 6: Statistiche (IN SVILUPPO)
+### ✅ FASE 5: Calendario e Lista Prenotazioni (COMPLETATA)
 
-_Test disponibili dopo implementazione..._
+**Prerequisito**: Login + `/reservations` o Dashboard (Home)
+
+#### Test 5.1: Lista Prenotazioni
+**Passi:**
+1. Vai su `/reservations`
+2. Verifica che la lista mostri le prenotazioni dal DB
+3. Prova i filtri (Servizio, Stato, Ricerca)
+
+#### Test 5.2: Calendario (Day View)
+**Passi:**
+1. Seleziona un giorno nel calendario o clicca "Giorno"
+2. Verifica che le prenotazioni appaiano negli slot corretti
+3. Verifica che i contatori (coperti, occupazione) siano reali
 
 ---

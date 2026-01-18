@@ -26,6 +26,7 @@ export function TableManagement() {
         handleSubmit,
         reset,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<TableFormData>({
         resolver: zodResolver(tableSchema) as any,
@@ -36,6 +37,8 @@ export function TableManagement() {
             isActive: true,
         },
     });
+
+    const watchedPosition = watch('position');
 
     const handleAddTable = () => {
         setEditingTable(null);
@@ -150,7 +153,7 @@ export function TableManagement() {
                                 <div className="space-y-2">
                                     <Label htmlFor="position">Posizione</Label>
                                     <Select
-                                        defaultValue={editingTable?.position || spaces[0]?.value}
+                                        value={watchedPosition}
                                         onValueChange={(value) => setValue('position', value)}
                                     >
                                         <SelectTrigger id="position">
