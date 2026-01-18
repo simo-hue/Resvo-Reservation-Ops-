@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { mockReservations, mockRestaurant } from '@/lib/mock-data';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useRestaurantSettings } from '@/lib/contexts/restaurant-settings-context';
+import { reservationsService } from '@/lib/supabase/services/reservations.service';
+import { Reservation } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { RefreshCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     STATS_PERIODS,
     calculateStats,
@@ -52,31 +58,59 @@ const COLORS = {
 };
 
 export default function StatisticsPage() {
+    const { restaurant } = useRestaurantSettings();
     const [selectedPeriod, setSelectedPeriod] = useState('month');
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const period = useMemo(
         () => STATS_PERIODS.find((p) => p.value === selectedPeriod) || STATS_PERIODS[1],
         [selectedPeriod]
     );
 
+    const fetchReservations = async () => {
+        if (!restaurant) return;
+
+        try {
+            setIsLoading(true);
+            // Fetch reservations for the selected period
+            // Include cancelled reservations for accurate stats if needed, or filter them out in the service
+            const data = await reservationsService.getReservationsForPeriod(
+                restaurant.id,
+                period.start,
+                period.end
+            );
+            setReservations(data);
+        } catch (error) {
+            console.error('Error fetching statistics:', error);
+            toast.error('Impossibile caricare le statistiche. Riprova più tardi.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchReservations();
+    }, [restaurant, period]); // Re-fetch when restaurant or period changes
+
     const stats = useMemo(
-        () => calculateStats(mockReservations, period.start, period.end),
-        [period]
+        () => calculateStats(reservations, period.start, period.end),
+        [reservations, period]
     );
 
     const dailyData = useMemo(
-        () => getReservationsByDay(mockReservations, period.start, period.end),
-        [period]
+        () => getReservationsByDay(reservations, period.start, period.end),
+        [reservations, period]
     );
 
     const weekdayData = useMemo(
-        () => getReservationsByDayOfWeek(mockReservations),
-        []
+        () => getReservationsByDayOfWeek(reservations),
+        [reservations]
     );
 
     const topDays = useMemo(
-        () => getTopDays(mockReservations, 10),
-        []
+        () => getTopDays(reservations, 10),
+        [reservations]
     );
 
     const serviceDistribution = [
@@ -90,11 +124,17 @@ export default function StatisticsPage() {
         { name: 'In Attesa', value: stats.pendingCount, color: COLORS.warning },
     ];
 
-    // Calculate occupancy rate
-    const totalDays = Math.ceil((period.end.getTime() - period.start.getTime()) / (1000 * 60 * 60 * 24));
+    // Calculate occupancy rate (only if restaurant data is available)
+    const totalDays = Math.max(1, Math.ceil((period.end.getTime() - period.start.getTime()) / (1000 * 60 * 60 * 24)));
     const avgReservationsPerDay = stats.totalReservations / totalDays;
-    const maxCapacityPerDay = mockRestaurant.maxCapacityLunch + mockRestaurant.maxCapacityDinner;
-    const occupancyRate = Math.round((stats.totalGuests / (totalDays * maxCapacityPerDay)) * 100);
+
+    // Safely handle restaurant defaults or missing data needed for calc
+    const maxCapacityPerDay = restaurant ? (restaurant.maxCapacityLunch + restaurant.maxCapacityDinner) : 0;
+
+    // Avoid division by zero
+    const occupancyRate = (maxCapacityPerDay > 0)
+        ? Math.round((stats.totalGuests / (totalDays * maxCapacityPerDay)) * 100)
+        : 0;
 
     // Custom tooltip
     const CustomTooltip = ({ active, payload, label }: any) => {
@@ -113,6 +153,14 @@ export default function StatisticsPage() {
         return null;
     };
 
+    if (!restaurant) {
+        return (
+            <div className="p-8 text-center">
+                <p className="text-muted-foreground">Caricamento impostazioni ristorante...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -123,351 +171,374 @@ export default function StatisticsPage() {
                         Analisi e andamento del ristorante
                     </p>
                 </div>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                    <SelectTrigger className="w-full sm:w-[200px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {STATS_PERIODS.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                                {p.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {STATS_PERIODS.map((p) => (
+                                <SelectItem key={p.value} value={p.value}>
+                                    {p.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={fetchReservations}
+                        disabled={isLoading}
+                        title="Aggiorna dati"
+                    >
+                        <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-primary">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Prenotazioni</CardTitle>
-                        <Calendar className="h-4 w-4 text-primary" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalReservations}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {Math.round(avgReservationsPerDay * 10) / 10}/giorno
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-blue-500">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Coperti</CardTitle>
-                        <Users className="h-4 w-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalGuests}</div>
-                        <p className="text-xs text-muted-foreground">
-                            Media {stats.avgGuestsPerReservation} per prenotazione
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-green-500">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Occupazione</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{occupancyRate}%</div>
-                        <p className="text-xs text-muted-foreground">
-                            Tasso medio
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-emerald-500">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Confermate</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">{stats.confirmedCount}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {stats.pendingCount} in attesa
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Charts Section */}
-            <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-md grid-cols-3">
-                    <TabsTrigger value="overview">Panoramica</TabsTrigger>
-                    <TabsTrigger value="trends">Andamento</TabsTrigger>
-                    <TabsTrigger value="distribution">Distribuzione</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview" className="space-y-4">
-                    {/* Daily Reservations Trend with dual lines */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Andamento Prenotazioni Giornaliere</CardTitle>
-                            <CardDescription>Pranzo vs Cena nel periodo selezionato</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <AreaChart data={dailyData}>
-                                    <defs>
-                                        <linearGradient id="colorPranzo" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={COLORS.lunch} stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor={COLORS.lunch} stopOpacity={0.1} />
-                                        </linearGradient>
-                                        <linearGradient id="colorCena" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={COLORS.dinner} stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor={COLORS.dinner} stopOpacity={0.1} />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis
-                                        dataKey="date"
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <YAxis
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: '20px' }}
-                                        iconType="circle"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="pranzo"
-                                        name="Pranzo"
-                                        stroke={COLORS.lunch}
-                                        strokeWidth={2}
-                                        fillOpacity={1}
-                                        fill="url(#colorPranzo)"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="cena"
-                                        name="Cena"
-                                        stroke={COLORS.dinner}
-                                        strokeWidth={2}
-                                        fillOpacity={1}
-                                        fill="url(#colorCena)"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    {/* Weekday Performance */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Performance per Giorno della Settimana</CardTitle>
-                            <CardDescription>Media prenotazioni per giorno</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <BarChart data={weekdayData}>
-                                    <XAxis
-                                        dataKey="day"
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <YAxis
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: '20px' }}
-                                        iconType="circle"
-                                    />
-                                    <Bar
-                                        dataKey="pranzo"
-                                        name="Pranzo"
-                                        fill={COLORS.lunch}
-                                        radius={[8, 8, 0, 0]}
-                                    />
-                                    <Bar
-                                        dataKey="cena"
-                                        name="Cena"
-                                        fill={COLORS.dinner}
-                                        radius={[8, 8, 0, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="trends" className="space-y-4">
-                    {/* Guests Trend with separate lines */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Andamento Coperti Giornalieri</CardTitle>
-                            <CardDescription>Numero di coperti per pranzo e cena</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <LineChart data={dailyData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                    <XAxis
-                                        dataKey="date"
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <YAxis
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: '20px' }}
-                                        iconType="circle"
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="copertiPranzo"
-                                        name="Coperti Pranzo"
-                                        stroke={COLORS.lunch}
-                                        strokeWidth={3}
-                                        dot={{ fill: COLORS.lunch, r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="copertiCena"
-                                        name="Coperti Cena"
-                                        stroke={COLORS.dinner}
-                                        strokeWidth={3}
-                                        dot={{ fill: COLORS.dinner, r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    {/* Top Days */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Top 10 Giorni</CardTitle>
-                            <CardDescription>Giorni con più prenotazioni</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <BarChart data={topDays} layout="vertical">
-                                    <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
-                                    <YAxis
-                                        dataKey="date"
-                                        type="category"
-                                        width={80}
-                                        stroke="#64748b"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Bar
-                                        dataKey="count"
-                                        name="Prenotazioni"
-                                        fill={COLORS.primary}
-                                        radius={[0, 8, 8, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="distribution" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Service Distribution */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Distribuzione Servizi</CardTitle>
-                                <CardDescription>Pranzo vs Cena</CardDescription>
+            {isLoading && reservations.length === 0 ? (
+                // Loading Skeleton
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                </div>
+            ) : (
+                <>
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Card className="border-l-4 border-l-primary">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Prenotazioni</CardTitle>
+                                <Calendar className="h-4 w-4 text-primary" />
                             </CardHeader>
                             <CardContent>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={serviceDistribution}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                            outerRadius={90}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                            strokeWidth={2}
-                                            stroke="#fff"
-                                        >
-                                            {serviceDistribution.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip content={<CustomTooltip />} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                                        <div className="text-2xl font-bold text-orange-600">{stats.lunchCount}</div>
-                                        <div className="text-sm font-medium">Pranzi</div>
-                                        <div className="text-xs text-muted-foreground">{stats.lunchGuests} coperti</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                                        <div className="text-2xl font-bold text-blue-600">{stats.dinnerCount}</div>
-                                        <div className="text-sm font-medium">Cene</div>
-                                        <div className="text-xs text-muted-foreground">{stats.dinnerGuests} coperti</div>
-                                    </div>
-                                </div>
+                                <div className="text-2xl font-bold">{stats.totalReservations}</div>
+                                <p className="text-xs text-muted-foreground">
+                                    {Math.round(avgReservationsPerDay * 10) / 10}/giorno
+                                </p>
                             </CardContent>
                         </Card>
 
-                        {/* Status Distribution */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Distribuzione Stati</CardTitle>
-                                <CardDescription>Stato delle prenotazioni</CardDescription>
+                        <Card className="border-l-4 border-l-blue-500">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Coperti</CardTitle>
+                                <Users className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={statusDistribution}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                            outerRadius={90}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                            strokeWidth={2}
-                                            stroke="#fff"
-                                        >
-                                            {statusDistribution.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip content={<CustomTooltip />} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="grid grid-cols-3 gap-2 mt-4">
-                                    <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                                        <div className="text-xl font-bold text-green-600">{stats.confirmedCount}</div>
-                                        <div className="text-xs font-medium">Confermate</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-primary/10 rounded-lg">
-                                        <div className="text-xl font-bold text-primary">{stats.completedCount}</div>
-                                        <div className="text-xs font-medium">Completate</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                                        <div className="text-xl font-bold text-yellow-600">{stats.pendingCount}</div>
-                                        <div className="text-xs font-medium">In Attesa</div>
-                                    </div>
-                                </div>
+                                <div className="text-2xl font-bold">{stats.totalGuests}</div>
+                                <p className="text-xs text-muted-foreground">
+                                    Media {stats.avgGuestsPerReservation} per prenotazione
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-green-500">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Occupazione</CardTitle>
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{occupancyRate}%</div>
+                                <p className="text-xs text-muted-foreground">
+                                    Tasso medio (su capacità totale {maxCapacityPerDay})
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-emerald-500">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Confermate</CardTitle>
+                                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-emerald-600">{stats.confirmedCount}</div>
+                                <p className="text-xs text-muted-foreground">
+                                    {stats.pendingCount} in attesa
+                                </p>
                             </CardContent>
                         </Card>
                     </div>
-                </TabsContent>
-            </Tabs>
+
+                    {/* Charts Section */}
+                    <Tabs defaultValue="overview" className="space-y-4">
+                        <TabsList className="grid w-full max-w-md grid-cols-3">
+                            <TabsTrigger value="overview">Panoramica</TabsTrigger>
+                            <TabsTrigger value="trends">Andamento</TabsTrigger>
+                            <TabsTrigger value="distribution">Distribuzione</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="overview" className="space-y-4">
+                            {/* Daily Reservations Trend with dual lines */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Andamento Prenotazioni Giornaliere</CardTitle>
+                                    <CardDescription>Pranzo vs Cena nel periodo selezionato</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <AreaChart data={dailyData}>
+                                            <defs>
+                                                <linearGradient id="colorPranzo" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={COLORS.lunch} stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor={COLORS.lunch} stopOpacity={0.1} />
+                                                </linearGradient>
+                                                <linearGradient id="colorCena" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={COLORS.dinner} stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor={COLORS.dinner} stopOpacity={0.1} />
+                                                </linearGradient>
+                                            </defs>
+                                            <XAxis
+                                                dataKey="date"
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <YAxis
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend
+                                                wrapperStyle={{ paddingTop: '20px' }}
+                                                iconType="circle"
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="pranzo"
+                                                name="Pranzo"
+                                                stroke={COLORS.lunch}
+                                                strokeWidth={2}
+                                                fillOpacity={1}
+                                                fill="url(#colorPranzo)"
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="cena"
+                                                name="Cena"
+                                                stroke={COLORS.dinner}
+                                                strokeWidth={2}
+                                                fillOpacity={1}
+                                                fill="url(#colorCena)"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+
+                            {/* Weekday Performance */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Performance per Giorno della Settimana</CardTitle>
+                                    <CardDescription>Media prenotazioni per giorno</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <BarChart data={weekdayData}>
+                                            <XAxis
+                                                dataKey="day"
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <YAxis
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend
+                                                wrapperStyle={{ paddingTop: '20px' }}
+                                                iconType="circle"
+                                            />
+                                            <Bar
+                                                dataKey="pranzo"
+                                                name="Pranzo"
+                                                fill={COLORS.lunch}
+                                                radius={[8, 8, 0, 0]}
+                                            />
+                                            <Bar
+                                                dataKey="cena"
+                                                name="Cena"
+                                                fill={COLORS.dinner}
+                                                radius={[8, 8, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="trends" className="space-y-4">
+                            {/* Guests Trend with separate lines */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Andamento Coperti Giornalieri</CardTitle>
+                                    <CardDescription>Numero di coperti per pranzo e cena</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <LineChart data={dailyData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                            <XAxis
+                                                dataKey="date"
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <YAxis
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend
+                                                wrapperStyle={{ paddingTop: '20px' }}
+                                                iconType="circle"
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="copertiPranzo"
+                                                name="Coperti Pranzo"
+                                                stroke={COLORS.lunch}
+                                                strokeWidth={3}
+                                                dot={{ fill: COLORS.lunch, r: 4 }}
+                                                activeDot={{ r: 6 }}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="copertiCena"
+                                                name="Coperti Cena"
+                                                stroke={COLORS.dinner}
+                                                strokeWidth={3}
+                                                dot={{ fill: COLORS.dinner, r: 4 }}
+                                                activeDot={{ r: 6 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+
+                            {/* Top Days */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Top 10 Giorni</CardTitle>
+                                    <CardDescription>Giorni con più prenotazioni</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <BarChart data={topDays} layout="vertical">
+                                            <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
+                                            <YAxis
+                                                dataKey="date"
+                                                type="category"
+                                                width={80}
+                                                stroke="#64748b"
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar
+                                                dataKey="count"
+                                                name="Prenotazioni"
+                                                fill={COLORS.primary}
+                                                radius={[0, 8, 8, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="distribution" className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Service Distribution */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Distribuzione Servizi</CardTitle>
+                                        <CardDescription>Pranzo vs Cena</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={serviceDistribution}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    labelLine={false}
+                                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                                    outerRadius={90}
+                                                    fill="#8884d8"
+                                                    dataKey="value"
+                                                    strokeWidth={2}
+                                                    stroke="#fff"
+                                                >
+                                                    {serviceDistribution.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip content={<CustomTooltip />} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div className="grid grid-cols-2 gap-4 mt-4">
+                                            <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                                                <div className="text-2xl font-bold text-orange-600">{stats.lunchCount}</div>
+                                                <div className="text-sm font-medium">Pranzi</div>
+                                                <div className="text-xs text-muted-foreground">{stats.lunchGuests} coperti</div>
+                                            </div>
+                                            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                                                <div className="text-2xl font-bold text-blue-600">{stats.dinnerCount}</div>
+                                                <div className="text-sm font-medium">Cene</div>
+                                                <div className="text-xs text-muted-foreground">{stats.dinnerGuests} coperti</div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Status Distribution */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Distribuzione Stati</CardTitle>
+                                        <CardDescription>Stato delle prenotazioni</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={statusDistribution}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    labelLine={false}
+                                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                                    outerRadius={90}
+                                                    fill="#8884d8"
+                                                    dataKey="value"
+                                                    strokeWidth={2}
+                                                    stroke="#fff"
+                                                >
+                                                    {statusDistribution.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip content={<CustomTooltip />} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div className="grid grid-cols-3 gap-2 mt-4">
+                                            <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                                                <div className="text-xl font-bold text-green-600">{stats.confirmedCount}</div>
+                                                <div className="text-xs font-medium">Confermate</div>
+                                            </div>
+                                            <div className="text-center p-3 bg-primary/10 rounded-lg">
+                                                <div className="text-xl font-bold text-primary">{stats.completedCount}</div>
+                                                <div className="text-xs font-medium">Completate</div>
+                                            </div>
+                                            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+                                                <div className="text-xl font-bold text-yellow-600">{stats.pendingCount}</div>
+                                                <div className="text-xs font-medium">In Attesa</div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </>
+            )}
         </div>
     );
 }

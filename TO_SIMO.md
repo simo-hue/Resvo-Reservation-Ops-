@@ -1,22 +1,5 @@
 # TO_SIMO.md - Operazioni Manuali
 
-**Risultato Atteso:**
-- ✅ Toast verde "Logout effettuato"
-- ✅ Redirect a `/login`
-- ✅ Se provi ad andare su `/`, vieni redirectato a login
-
-#### Test 1.5: Accesso Diretto senza Login
-**Passi:**
-1. Fai logout (o usa finestra incognito)
-2. Prova ad andare direttamente su `http://localhost:3000/`
-3. O su `/settings/restaurant`
-
-**Risultato Atteso:**
-- ✅ Redirect automatico a `/login`
-- ✅ Non vedi contenuti protetti
-
----
-
 ### ✅ FASE 2: Restaurant Settings (COMPLETATA)
 
 **Prerequisito**: Devi essere loggato!
@@ -197,43 +180,3 @@ _Test disponibili dopo implementazione..._
 _Test disponibili dopo implementazione..._
 
 ---
-
-## 🐛 Cosa fare se trovi problemi
-
-### Problema: "Cannot read properties of null"
-**Causa**: Dati non ancora caricati
-**Soluzione**: 
-- Ricarica la pagina
-- Verifica di essere loggato
-- Controlla console per errori di rete
-
-### Problema: "Failed to fetch" o errori Supabase
-**Causa**: Configurazione errata
-**Controlla**:
-1. File `.env.local` ha URL e anon key corretti
-2. Supabase project è attivo
-3. RLS policies sono attive
-
-### Problema: Dati non si salvano
-**Controlla**:
-1. Console browser per errori
-2. Network tab per vedere chiamate API
-3. Supabase Dashboard → Logs per errori server
-
-### Problema: Redirect loop login
-**Causa**: Cookie/session problemi
-**Soluzione**:
-- Cancella cookies del browser
-- Logout e login di nuovo
-- Prova finestra incognito
-
----
-
-## 📝 PROSSIMI STEP (da implementare)
-
-1. ✅ Database schema completato
-2. ✅ Autenticazione implementata
-3. ✅ Restaurant Settings migrato a Supabase
-4. ⏳ Implementare Reservations Service (IN CORSO)
-5. ⏳ Migrare Calendario e Lista Prenotazioni
-6. ⏳ Implementare Statistics Service
