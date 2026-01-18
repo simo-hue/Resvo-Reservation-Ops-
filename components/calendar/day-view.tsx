@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isSameDay, format } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Users, Phone, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -88,6 +88,32 @@ export function DayView({
         pending: 'In attesa',
         cancelled: 'Cancellata',
     };
+
+    // Ref for the bottom actions section
+    const bottomActionsRef = useRef<HTMLDivElement>(null);
+    const [isBottomActionsVisible, setIsBottomActionsVisible] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsBottomActionsVisible(entry.isIntersecting);
+            },
+            {
+                root: null,
+                threshold: 0.1, // Trigger when 10% of the element is visible
+            }
+        );
+
+        if (bottomActionsRef.current) {
+            observer.observe(bottomActionsRef.current);
+        }
+
+        return () => {
+            if (bottomActionsRef.current) {
+                observer.unobserve(bottomActionsRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className="flex flex-col space-y-4">
@@ -232,16 +258,18 @@ export function DayView({
                 )}
             </div>
 
-            {/* Floating Action Button - Mobile */}
+            {/* Floating Action Button - Mobile & Desktop (Conditional) */}
             {onAddReservation && (
                 <Button
-                    onClick={() => onAddReservation(currentDate, selectedService)}
+                    onClick={() => onAddReservation?.(currentDate, selectedService)}
                     size="lg"
                     className={cn(
                         'fixed bottom-4 right-4 sm:bottom-6 sm:right-6',
                         'h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-lg',
                         'transition-all duration-300 hover:scale-110 active:scale-95',
-                        'z-50'
+                        'z-50',
+                        // Hide on desktop when bottom actions are visible
+                        isBottomActionsVisible && 'sm:opacity-0 sm:pointer-events-none sm:translate-y-4'
                     )}
                 >
                     <Plus className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -249,7 +277,7 @@ export function DayView({
             )}
 
             {/* Quick Action - Desktop Only */}
-            <div className="hidden sm:flex gap-2">
+            <div ref={bottomActionsRef} className="hidden sm:flex gap-2">
                 <Button onClick={handleToday} variant="outline" className="flex-1">
                     Vai a Oggi
                 </Button>
