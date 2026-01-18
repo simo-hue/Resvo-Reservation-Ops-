@@ -1,5 +1,7 @@
 import { supabase } from '../client';
 import type { Reservation, ServiceType, ReservationStatus } from '@/types';
+import { formatDateForDatabase } from '@/lib/utils/date-utils';
+
 
 export interface ReservationFilters {
     serviceType?: ServiceType;
@@ -29,11 +31,13 @@ export class ReservationsService {
         }
 
         if (filters?.startDate) {
-            query = query.gte('reservation_date', filters.startDate.toISOString().split('T')[0]);
+            query = query.gte('reservation_date', formatDateForDatabase(filters.startDate));
+
         }
 
         if (filters?.endDate) {
-            query = query.lte('reservation_date', filters.endDate.toISOString().split('T')[0]);
+            query = query.lte('reservation_date', formatDateForDatabase(filters.endDate));
+
         }
 
         if (filters?.search) {
@@ -62,7 +66,8 @@ export class ReservationsService {
         date: Date,
         serviceType?: ServiceType
     ): Promise<Reservation[]> {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDateForDatabase(date);
+
 
         let query = supabase
             .from('reservations')
@@ -94,8 +99,9 @@ export class ReservationsService {
         startDate: Date,
         endDate: Date
     ): Promise<Reservation[]> {
-        const startStr = startDate.toISOString().split('T')[0];
-        const endStr = endDate.toISOString().split('T')[0];
+        const startStr = formatDateForDatabase(startDate);
+        const endStr = formatDateForDatabase(endDate);
+
 
         const { data, error } = await supabase
             .from('reservations')
@@ -139,11 +145,16 @@ export class ReservationsService {
         restaurantId: string,
         reservation: Omit<Reservation, 'id' | 'restaurantId' | 'createdAt' | 'updatedAt'>
     ): Promise<Reservation> {
+        console.log('Creating reservation with date:', reservation.date);
+        console.log('Formatted date for DB:', formatDateForDatabase(reservation.date));
+
         const { data, error } = await supabase
+
             .from('reservations')
             .insert({
                 restaurant_id: restaurantId,
-                reservation_date: reservation.date.toISOString().split('T')[0],
+                reservation_date: formatDateForDatabase(reservation.date),
+
                 reservation_time: reservation.time,
                 service_type: reservation.serviceType,
                 num_guests: reservation.numGuests,
@@ -176,7 +187,8 @@ export class ReservationsService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const updateData: any = {};
 
-        if (updates.date) updateData.reservation_date = updates.date.toISOString().split('T')[0];
+        if (updates.date) updateData.reservation_date = formatDateForDatabase(updates.date);
+
         if (updates.time) updateData.reservation_time = updates.time;
         if (updates.serviceType) updateData.service_type = updates.serviceType;
         if (updates.numGuests !== undefined) updateData.num_guests = updates.numGuests;
@@ -240,13 +252,17 @@ export class ReservationsService {
     /**
      * Map database row to Reservation type
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapToReservation(data: any): Reservation {
+        // Parse date string (YYYY-MM-DD) as local date at midnight to avoid UTC offsets
+        const [year, month, day] = data.reservation_date.split('-').map(Number);
+        const localDate = new Date(year, month - 1, day);
+
         return {
             id: data.id,
             restaurantId: data.restaurant_id,
-            date: new Date(data.reservation_date),
+            date: localDate,
             time: data.reservation_time,
+
             serviceType: data.service_type,
             numGuests: data.num_guests,
             customerName: data.customer_name,

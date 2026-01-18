@@ -238,11 +238,10 @@ export default function ReservationsPage() {
                         <div className="flex flex-row justify-center gap-3 w-full md:w-auto">
                             <div className="w-[45%] md:w-[150px] max-w-[200px]">
                                 <Select value={serviceFilter} onValueChange={(value) => setServiceFilter(value as ServiceType | 'all')}>
-                                    <SelectTrigger className="h-10 bg-background/50 text-center justify-center">
-                                        <div className="flex items-center gap-2">
-                                            <span className="truncate">{serviceFilter === 'all' ? 'Servizio' : (serviceFilter === 'lunch' ? 'Pranzo' : 'Cena')}</span>
-                                        </div>
+                                    <SelectTrigger className="h-10 bg-background/50">
+                                        <SelectValue placeholder="Servizio" />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                         <SelectItem value="all">Tutti</SelectItem>
                                         <SelectItem value="lunch">☀️ Pranzo</SelectItem>
@@ -253,15 +252,10 @@ export default function ReservationsPage() {
 
                             <div className="w-[45%] md:w-[150px] max-w-[200px]">
                                 <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ReservationStatus | 'all')}>
-                                    <SelectTrigger className="h-10 bg-background/50 text-center justify-center">
-                                        <div className="flex items-center gap-2">
-                                            <span className="truncate">{statusFilter === 'all' ? 'Stato' : (
-                                                statusFilter === 'confirmed' ? 'Confermate' :
-                                                    statusFilter === 'pending' ? 'In Attesa' :
-                                                        statusFilter === 'cancelled' ? 'Cancellate' : 'Completate'
-                                            )}</span>
-                                        </div>
+                                    <SelectTrigger className="h-10 bg-background/50">
+                                        <SelectValue placeholder="Stato" />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                         <SelectItem value="all">Tutti</SelectItem>
                                         <SelectItem value="confirmed">Confermate</SelectItem>

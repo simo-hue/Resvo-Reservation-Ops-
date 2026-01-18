@@ -15,47 +15,44 @@ interface DayViewProps {
     reservations: Reservation[];
     selectedService: ServiceType;
     maxCapacity: number;
-    onDayClick?: (date: Date) => void;
     onAddReservation?: (date: Date, service: ServiceType) => void;
-    initialDate?: Date | null; // Optional initial date to display
+    date: Date;
+    onDateChange: (date: Date) => void;
 }
 
 export function DayView({
     reservations,
     selectedService,
     maxCapacity,
-    // onDayClick, // Kept in props interface but unused in component logic currently
     onAddReservation,
-    initialDate,
+    date,
+    onDateChange,
 }: DayViewProps) {
-    const [currentDate, setCurrentDate] = useState(initialDate || new Date());
 
-    // Sync with initialDate when it changes (e.g., when clicking a day from calendar)
-    // Sync with initialDate when it changes (e.g., when clicking a day from calendar)
-    useEffect(() => {
-        if (initialDate && !isSameDay(initialDate, currentDate)) {
-            setCurrentDate(initialDate);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialDate]);
+
+
 
     const handlePreviousDay = () => {
-        const newDate = new Date(currentDate);
+        const newDate = new Date(date);
         newDate.setDate(newDate.getDate() - 1);
-        setCurrentDate(newDate);
+        onDateChange(newDate);
     };
+
 
     const handleNextDay = () => {
-        const newDate = new Date(currentDate);
+        const newDate = new Date(date);
         newDate.setDate(newDate.getDate() + 1);
-        setCurrentDate(newDate);
+        onDateChange(newDate);
     };
+
 
     const handleToday = () => {
-        setCurrentDate(new Date());
+        onDateChange(new Date());
     };
 
-    const dayReservations = getReservationsForDateAndService(reservations, currentDate, selectedService);
+
+    const dayReservations = getReservationsForDateAndService(reservations, date, selectedService);
+
     const totalGuests = dayReservations.reduce((sum, r) => sum + r.numGuests, 0);
     const status = getCapacityStatus(totalGuests, maxCapacity);
 
@@ -135,11 +132,12 @@ export function DayView({
 
                     <div className="text-center">
                         <h2 className="text-lg sm:text-2xl md:text-3xl font-bold capitalize">
-                            {formatDate(currentDate, 'EEEE d MMMM')}
+                            {formatDate(date, 'EEEE d MMMM')}
                         </h2>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                            {formatDate(currentDate, 'yyyy')}
+                            {formatDate(date, 'yyyy')}
                         </p>
+
                     </div>
 
                     <Button
@@ -265,7 +263,8 @@ export function DayView({
             {/* Floating Action Button - Mobile & Desktop (Conditional) */}
             {onAddReservation && (
                 <Button
-                    onClick={() => onAddReservation?.(currentDate, selectedService)}
+                    onClick={() => onAddReservation?.(date, selectedService)}
+
                     size="lg"
                     className={cn(
                         'fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom)_+_1rem)] right-4 lg:bottom-6 lg:right-6',
@@ -286,7 +285,8 @@ export function DayView({
                     Vai a Oggi
                 </Button>
                 {onAddReservation && (
-                    <Button onClick={() => onAddReservation(currentDate, selectedService)} className="flex-1">
+                    <Button onClick={() => onAddReservation(date, selectedService)} className="flex-1">
+
                         <Plus className="h-4 w-4 mr-2" />
                         Nuova Prenotazione
                     </Button>

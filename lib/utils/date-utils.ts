@@ -76,3 +76,14 @@ export function getTodayAtMidnight(): Date {
 export function createDate(year: number, month: number, day: number): Date {
     return new Date(year, month, day);
 }
+
+/**
+ * Format a date for database (YYYY-MM-DD) using local time
+ * This avoids timezone issues where toISOString() might return previous day
+ */
+export function formatDateForDatabase(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}

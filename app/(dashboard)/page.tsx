@@ -20,7 +20,8 @@ export default function HomePage() {
     const { restaurant, isLoading: settingsLoading } = useRestaurantSettings();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [selectedService, setSelectedService] = useState<ServiceType>('dinner');
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [viewDate, setViewDate] = useState<Date>(new Date());
+
     const [reservationFormOpen, setReservationFormOpen] = useState(false);
     const [prefilledDate, setPrefilledDate] = useState<Date | null>(null);
     const [prefilledService, setPrefilledService] = useState<ServiceType>('dinner');
@@ -65,9 +66,10 @@ export default function HomePage() {
         : restaurant?.maxCapacityDinner || 100;
 
     const handleDayClick = (date: Date) => {
-        setSelectedDate(date);
+        setViewDate(date);
         setViewType('day'); // Switch to day view instead of opening modal
     };
+
 
     const handleAddReservation = (date: Date, service: ServiceType) => {
         setPrefilledDate(date);
@@ -154,9 +156,13 @@ export default function HomePage() {
                     <Button
                         variant={viewType === 'day' ? 'default' : 'ghost'}
                         size="sm"
-                        onClick={() => setViewType('day')}
+                        onClick={() => {
+                            setViewType('day');
+                            setViewDate(new Date());
+                        }}
                         className="gap-2 h-9 flex-1"
                     >
+
                         <CalendarIcon className="h-4 w-4" />
                         <span className="font-medium">Giorno</span>
                     </Button>
@@ -184,10 +190,11 @@ export default function HomePage() {
                         reservations={reservations}
                         selectedService={selectedService}
                         maxCapacity={maxCapacity}
-                        onDayClick={handleDayClick}
                         onAddReservation={handleAddReservation}
-                        initialDate={selectedDate}
+                        date={viewDate}
+                        onDateChange={setViewDate}
                     />
+
                 )}
             </div>
             {/* Day detail modal - Disabled, now using DayView directly */}
