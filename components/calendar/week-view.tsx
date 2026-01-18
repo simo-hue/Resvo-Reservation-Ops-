@@ -131,7 +131,7 @@ export function WeekView({
             </div>
 
             {/* Week Grid */}
-            <div ref={weekRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 touch-none">
+            <div ref={weekRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
                 {weekDays.map((day) => {
                     const dayData = getDayData(day);
                     const isToday = isSameDay(day, new Date());

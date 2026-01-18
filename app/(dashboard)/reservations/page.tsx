@@ -249,13 +249,12 @@ export default function ReservationsPage() {
                         {(searchQuery || serviceFilter !== 'all' || statusFilter !== 'all') && (
                             <Button
                                 variant="outline"
-                                size="icon"
                                 onClick={() => {
                                     setSearchQuery('');
                                     setServiceFilter('all');
                                     setStatusFilter('all');
                                 }}
-                                className="h-11 sm:h-10 w-11 sm:w-10 flex-shrink-0"
+                                className="h-11 sm:h-10 w-11 sm:w-10 flex-shrink-0 bg-background/50 p-0 flex items-center justify-center"
                                 title="Reset filtri"
                             >
                                 <X className="h-4 w-4" />

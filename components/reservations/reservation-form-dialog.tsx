@@ -41,6 +41,7 @@ export function ReservationFormDialog({
     const [selectedService, setSelectedService] = useState<ServiceType>(
         reservation?.serviceType || 'dinner'
     );
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
     const {
         register,
@@ -175,6 +176,8 @@ export function ReservationFormDialog({
                             <Label htmlFor="customerPhone">Telefono *</Label>
                             <Input
                                 id="customerPhone"
+                                type="tel"
+                                inputMode="tel"
                                 {...register('customerPhone')}
                                 placeholder="3331234567"
                             />
@@ -201,7 +204,7 @@ export function ReservationFormDialog({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label>Data *</Label>
-                            <Popover>
+                            <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
@@ -222,6 +225,7 @@ export function ReservationFormDialog({
                                             const normalized = normalizeToMidnight(date);
                                             setSelectedDate(normalized);
                                             setValue('date', normalized);
+                                            setIsDatePickerOpen(false);
                                         }}
                                         initialFocus
                                     />
@@ -279,8 +283,11 @@ export function ReservationFormDialog({
                             <Input
                                 id="numGuests"
                                 type="number"
+                                inputMode="numeric"
                                 {...register('numGuests', { valueAsNumber: true })}
                                 placeholder="2"
+                                min="1"
+                                max="50"
                             />
                             {errors.numGuests && (
                                 <p className="text-sm text-destructive">{errors.numGuests.message}</p>
