@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Reservation } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils/date-utils';
 import { STATUS_COLORS } from '@/lib/constants';
 import { Users, Phone, Mail, Clock, UtensilsCrossed, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface ReservationCardProps {
     reservation: Reservation;
@@ -21,6 +23,8 @@ export function ReservationCard({ reservation, onEdit, onDelete }: ReservationCa
         cancelled: 'Cancellata',
         completed: 'Completata',
     }[reservation.status];
+
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     return (
         <Card className="p-4 hover:shadow-md transition-shadow">
@@ -98,12 +102,36 @@ export function ReservationCard({ reservation, onEdit, onDelete }: ReservationCa
                     <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => onDelete(reservation.id)}
+                        onClick={() => setIsConfirmOpen(true)}
                     >
                         <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                 </div>
             </div>
+
+            <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Conferma Eliminazione</DialogTitle>
+                        <DialogDescription>
+                            Sei sicuro di voler eliminare la prenotazione di {reservation.customerName}? Questa azione è irreversibile.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>Annulla</Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                onDelete(reservation.id);
+                                setIsConfirmOpen(false);
+                            }}
+                        >
+                            Elimina
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }
