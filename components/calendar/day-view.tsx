@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus, Users, Phone, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Users, Phone, Clock, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,8 @@ interface DayViewProps {
     reservations: Reservation[];
     selectedService: ServiceType;
     maxCapacity: number;
+    onEditReservation?: (reservation: Reservation) => void;
+    onDeleteReservation?: (id: string) => void;
     onAddReservation?: (date: Date, service: ServiceType) => void;
     date: Date;
     onDateChange: (date: Date) => void;
@@ -28,6 +31,8 @@ export function DayView({
     selectedService,
     maxCapacity,
     onAddReservation,
+    onEditReservation,
+    onDeleteReservation,
     date,
     onDateChange,
     greenThreshold = 60,
@@ -103,6 +108,8 @@ export function DayView({
     // Ref for the bottom actions section
     const bottomActionsRef = useRef<HTMLDivElement>(null);
     const [isBottomActionsVisible, setIsBottomActionsVisible] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -266,11 +273,62 @@ export function DayView({
                                             )}
                                         </div>
                                     </div>
+                                    {/* Actions (edit/delete) */}
+                                    <div className="ml-3 flex-shrink-0 flex flex-col gap-1">
+                                        {onEditReservation && (
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => onEditReservation(reservation)}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        {onDeleteReservation && (
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    setReservationToDelete(reservation);
+                                                    setIsConfirmOpen(true);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             </Card>
                         ))
                 )}
             </div>
+
+            <Dialog open={isConfirmOpen} onOpenChange={(open) => { if (!open) { setReservationToDelete(null); } setIsConfirmOpen(open); }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Conferma Eliminazione</DialogTitle>
+                        <DialogDescription>
+                            Sei sicuro di voler eliminare la prenotazione selezionata? Questa azione è irreversibile.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => { setIsConfirmOpen(false); setReservationToDelete(null); }}>Annulla</Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                if (reservationToDelete && onDeleteReservation) {
+                                    onDeleteReservation(reservationToDelete.id);
+                                }
+                                setIsConfirmOpen(false);
+                                setReservationToDelete(null);
+                            }}
+                        >
+                            Elimina
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Floating Action Button - Mobile & Desktop (Conditional) */}
             {onAddReservation && (

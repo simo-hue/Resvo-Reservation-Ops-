@@ -26,6 +26,7 @@ export default function HomePage() {
     const [reservationFormOpen, setReservationFormOpen] = useState(false);
     const [prefilledDate, setPrefilledDate] = useState<Date | null>(null);
     const [prefilledService, setPrefilledService] = useState<ServiceType>('dinner');
+    const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
     const [viewType, setViewType] = useState<ViewType>('month');
     const [isLoadingReservations, setIsLoadingReservations] = useState(true);
 
@@ -81,6 +82,25 @@ export default function HomePage() {
         setPrefilledDate(normalizeToMidnight(date));
         setPrefilledService(service);
         setReservationFormOpen(true);
+    };
+
+    const handleEditReservation = (reservation: Reservation) => {
+        setEditingReservation(reservation);
+        setPrefilledDate(null);
+        setReservationFormOpen(true);
+    };
+
+    const handleDeleteReservation = async (id: string) => {
+        if (!restaurant) return;
+
+        try {
+            await reservationsService.deleteReservation(id);
+            toast.success('Prenotazione eliminata');
+            await loadReservations();
+        } catch (error) {
+            console.error('Error deleting reservation:', error);
+            toast.error('Errore durante l\'eliminazione');
+        }
     };
 
     const handleSaveReservation = async (data: Partial<Reservation>) => {
@@ -203,6 +223,8 @@ export default function HomePage() {
                         selectedService={selectedService}
                         maxCapacity={maxCapacity}
                         onAddReservation={handleAddReservation}
+                        onEditReservation={handleEditReservation}
+                        onDeleteReservation={handleDeleteReservation}
                         date={viewDate}
                         onDateChange={setViewDate}
                         greenThreshold={greenThreshold}
@@ -227,8 +249,14 @@ export default function HomePage() {
             {/* Reservation form dialog */}
             <ReservationFormDialog
                 open={reservationFormOpen}
-                onOpenChange={setReservationFormOpen}
-                reservation={prefilledDate ? {
+                onOpenChange={(open) => {
+                    setReservationFormOpen(open);
+                    if (!open) {
+                        setEditingReservation(null);
+                        setPrefilledDate(null);
+                    }
+                }}
+                reservation={editingReservation ? editingReservation : (prefilledDate ? {
                     id: '',
                     restaurantId: 'restaurant-1',
                     date: prefilledDate,
@@ -240,7 +268,7 @@ export default function HomePage() {
                     status: 'confirmed',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                } as Reservation : null}
+                } as Reservation : null)}
                 onSave={handleSaveReservation}
             />
 
