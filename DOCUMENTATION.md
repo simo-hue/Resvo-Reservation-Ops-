@@ -20,7 +20,7 @@ The booking management system allows full control over reservation lifecycles.
 
 ### List Organization & Filters
 - **Grouping**: Reservations are now grouped by Date.
-- **Quick Filters**: Use the chips (Oggi, Domani, Weekend, etc.) to quickly filter by date range.
+- **Quick Filters**: Use the chips (Oggi, Domani, Weekend, etc.) to quickly filter by date range. Default view shows **Tutti** (All Upcoming) for ease of use.
 - **Interactive Stats**: Click on "Oggi" or "In Arrivo" cards to apply instant filters.
 - **Advanced Filters (Desktop)**: Single-row layout with Search, Service, Status and Reset.
 - **Date Filters**: Modern "Segmented Control" style, centered on the page.

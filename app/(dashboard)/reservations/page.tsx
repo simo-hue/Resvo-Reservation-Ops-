@@ -31,7 +31,7 @@ export default function ReservationsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [serviceFilter, setServiceFilter] = useState<ServiceType | 'all'>('all');
     const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>('all');
-    const [dateFilter, setDateFilter] = useState<DateFilterType>('today'); // Default to Today
+    const [dateFilter, setDateFilter] = useState<DateFilterType>('all'); // Default to All
 
     const loadReservations = useCallback(async () => {
         if (!restaurant) return;
@@ -273,8 +273,15 @@ export default function ReservationsPage() {
             {/* Filters */}
             <Card className="p-3 sm:p-4 border-none shadow-md bg-card/50 backdrop-blur-sm space-y-4">
                 {/* Date Quick Filters (Segmented Control Style) */}
-                <div className="w-full overflow-x-auto pb-2 sm:pb-0 scrollbar-hide flex sm:justify-center">
-                    <div className="inline-flex bg-muted/50 p-1 rounded-full border border-border/50 shadow-inner min-w-full sm:min-w-0">
+                {/* Date Quick Filters (Adaptive: Chips on Mobile, Segmented Control on Desktop) */}
+                <div className="w-full overflow-x-auto pb-2 sm:pb-0 scrollbar-hide flex sm:justify-center -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className={cn(
+                        "flex items-center",
+                        // Mobile Styles (Chips)
+                        "gap-2",
+                        // Desktop Styles (Segmented Control)
+                        "sm:gap-0 sm:bg-muted/50 sm:p-1 sm:rounded-full sm:border sm:border-border/50 sm:shadow-inner sm:inline-flex"
+                    )}>
                         {[
                             { label: 'Oggi', value: 'today' },
                             { label: 'Domani', value: 'tomorrow' },
@@ -289,10 +296,18 @@ export default function ReservationsPage() {
                                     key={filter.value}
                                     onClick={() => setDateFilter(filter.value as DateFilterType)}
                                     className={cn(
-                                        "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 sm:flex-none text-center",
+                                        "text-sm font-medium transition-all duration-200 whitespace-nowrap flex-none text-center",
+                                        // Mobile Styles (Pills)
+                                        "px-4 py-2 rounded-full border",
                                         isActive
-                                            ? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                            : "bg-background text-muted-foreground border-border hover:bg-muted",
+
+                                        // Desktop Styles (Segmented Item)
+                                        "sm:border-0 sm:px-4 sm:py-1.5 sm:rounded-full",
+                                        isActive
+                                            ? "sm:bg-background sm:text-foreground sm:shadow-sm sm:ring-1 sm:ring-black/5 sm:dark:ring-white/10"
+                                            : "sm:bg-transparent sm:text-muted-foreground sm:hover:text-foreground sm:hover:bg-background/50"
                                     )}
                                 >
                                     {filter.label}
@@ -375,6 +390,20 @@ export default function ReservationsPage() {
                 onDelete={handleDelete}
                 onConfirm={handleConfirm}
             />
+
+            {/* Floating Action Button (Mobile) */}
+            <Button
+                onClick={handleAddNew}
+                size="lg"
+                className={cn(
+                    'fixed bottom-[calc(4rem_+_env(safe-area-inset-bottom)_+_1rem)] right-4 lg:hidden', // Hidden on large screens
+                    'h-14 w-14 rounded-full shadow-lg p-0',
+                    'transition-all duration-300 hover:scale-110 active:scale-95',
+                    'z-50 bg-primary text-primary-foreground'
+                )}
+            >
+                <Plus className="h-6 w-6" />
+            </Button>
 
             {/* Form Dialog */}
             <ReservationFormDialog
