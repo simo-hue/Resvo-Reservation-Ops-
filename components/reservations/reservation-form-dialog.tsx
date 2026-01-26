@@ -36,12 +36,7 @@ export function ReservationFormDialog({
 }: ReservationFormDialogProps) {
     const { restaurant } = useRestaurantSettings();
     const [tables, setTables] = useState<Table[]>([]);
-    const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-        reservation ? normalizeToMidnight(new Date(reservation.date)) : normalizeToMidnight(new Date())
-    );
-    const [selectedService, setSelectedService] = useState<ServiceType>(
-        reservation?.serviceType || 'dinner'
-    );
+
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
     const {
@@ -71,6 +66,8 @@ export function ReservationFormDialog({
     const watchedTime = useWatch({ control, name: 'time' });
     const watchedTableId = useWatch({ control, name: 'tableId' });
     const watchedStatus = useWatch({ control, name: 'status' });
+    const watchedDate = useWatch({ control, name: 'date' });
+    const watchedService = useWatch({ control, name: 'serviceType' });
 
     // Fetch tables
     useEffect(() => {
@@ -92,8 +89,6 @@ export function ReservationFormDialog({
         if (open) {
             if (reservation) {
                 const date = normalizeToMidnight(new Date(reservation.date));
-                setSelectedDate(date);
-                setSelectedService(reservation.serviceType);
                 reset({
                     customerName: reservation.customerName,
                     customerPhone: reservation.customerPhone || '',
@@ -107,13 +102,11 @@ export function ReservationFormDialog({
                     status: reservation.status,
                 });
             } else {
-                setSelectedDate(normalizeToMidnight(new Date()));
-                setSelectedService('dinner');
                 reset({
                     customerName: '',
                     customerPhone: '',
                     customerEmail: '',
-                    date: new Date(),
+                    date: normalizeToMidnight(new Date()),
                     time: '',
                     serviceType: 'dinner',
                     numGuests: 0,
@@ -128,8 +121,8 @@ export function ReservationFormDialog({
     const onSubmit = async (data: ReservationFormData) => {
         const reservationData = {
             ...data,
-            date: selectedDate!,
-            serviceType: selectedService,
+            date: data.date,
+            serviceType: data.serviceType,
             id: reservation?.id,
             restaurantId: restaurant?.id || 'restaurant-1',
             createdAt: reservation?.createdAt || new Date(),
@@ -142,7 +135,7 @@ export function ReservationFormDialog({
         reset();
     };
 
-    const timeSlots = selectedService === 'lunch'
+    const timeSlots = watchedService === 'lunch'
         ? DEFAULT_TIME_SLOTS.LUNCH
         : DEFAULT_TIME_SLOTS.DINNER;
 
@@ -290,16 +283,15 @@ export function ReservationFormDialog({
                                                     )}
                                                 >
                                                     <CalendarIcon className="mr-2 h-3 w-3" />
-                                                    {selectedDate ? formatDate(selectedDate, 'dd/MM/yyyy') : 'Seleziona data'}
+                                                    {watchedDate ? formatDate(watchedDate, 'dd/MM/yyyy') : 'Seleziona data'}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
                                                 <Calendar
                                                     mode="single"
-                                                    selected={selectedDate}
+                                                    selected={watchedDate}
                                                     onSelect={(date) => {
                                                         const normalized = normalizeToMidnight(date);
-                                                        setSelectedDate(normalized);
                                                         setValue('date', normalized);
                                                         setIsDatePickerOpen(false);
                                                     }}
@@ -315,9 +307,8 @@ export function ReservationFormDialog({
                                     <div className="space-y-1">
                                         <Label htmlFor="serviceType" className="text-xs">Servizio</Label>
                                         <Select
-                                            value={selectedService}
+                                            value={watchedService}
                                             onValueChange={(value) => {
-                                                setSelectedService(value as ServiceType);
                                                 setValue('serviceType', value as ServiceType);
                                                 setValue('time', '');
                                             }}

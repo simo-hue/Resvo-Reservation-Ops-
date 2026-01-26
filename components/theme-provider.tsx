@@ -13,51 +13,50 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setTheme] = useState<Theme>('system');
+    const [theme, setTheme] = useState<Theme>(() => {
+        if (typeof window !== 'undefined') {
+            return (localStorage.getItem('theme') as Theme) || 'system';
+        }
+        return 'system';
+    });
+
+    // Use a derived state for actual theme based on system preference
     const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
 
-    useEffect(() => {
-        // Load theme from localStorage
-        const savedTheme = localStorage.getItem('theme') as Theme | null;
-        if (savedTheme) {
-            setTheme(savedTheme);
-        }
-    }, []);
-
+    // Handle system theme changes and sync actualTheme
+    // Handle theme changes, apply to DOM, and sync actualTheme
     useEffect(() => {
         const root = window.document.documentElement;
         root.classList.remove('light', 'dark');
 
+        let targetTheme: 'light' | 'dark';
+
         if (theme === 'system') {
-            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            root.classList.add(systemTheme);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setActualTheme(systemTheme);
+            targetTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         } else {
-            root.classList.add(theme);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setActualTheme(theme);
+            targetTheme = theme;
         }
+
+        root.classList.add(targetTheme);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActualTheme(targetTheme);
 
         // Save to localStorage
         localStorage.setItem('theme', theme);
-    }, [theme]);
 
-    // Listen for system theme changes
-    useEffect(() => {
-        if (theme !== 'system') return;
+        // Listen for system changes if theme is system
+        if (theme === 'system') {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = (e: MediaQueryListEvent) => {
+                const newTheme = e.matches ? 'dark' : 'light';
+                root.classList.remove('light', 'dark');
+                root.classList.add(newTheme);
+                setActualTheme(newTheme);
+            };
 
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-            const root = window.document.documentElement;
-            root.classList.remove('light', 'dark');
-            const newTheme = e.matches ? 'dark' : 'light';
-            root.classList.add(newTheme);
-            setActualTheme(newTheme);
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
     }, [theme]);
 
     return (
