@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Reservation, ServiceType, ReservationStatus } from '@/types';
 import { ReservationFormDialog } from '@/components/reservations/reservation-form-dialog';
 import { ReservationListGrouped } from '@/components/reservations/reservation-list-grouped';
@@ -32,6 +32,35 @@ export default function ReservationsPage() {
     const [serviceFilter, setServiceFilter] = useState<ServiceType | 'all'>('all');
     const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>('all');
     const [dateFilter, setDateFilter] = useState<DateFilterType>('all'); // Default to All
+
+    // FAB Logic
+    const topButtonTriggerRef = useRef<HTMLDivElement>(null);
+    const [showFab, setShowFab] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                // If top button is visible (intersecting), hide FAB.
+                // If top button is NOT visible (not intersecting), show FAB.
+                setShowFab(!entry.isIntersecting);
+            },
+            {
+                threshold: 0,
+                // Negative top margin is crucial when you have a sticky header.
+                // It treats the viewport top edge as if it were 100px lower.
+                // This ensures the FAB shows up as soon as the button starts going under the header.
+                rootMargin: "-100px 0px 0px 0px"
+            }
+        );
+
+        if (topButtonTriggerRef.current) {
+            observer.observe(topButtonTriggerRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [settingsLoading, isLoadingReservations]);
 
     const loadReservations = useCallback(async () => {
         if (!restaurant) return;
@@ -213,7 +242,7 @@ export default function ReservationsPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-24">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -222,10 +251,12 @@ export default function ReservationsPage() {
                         Gestisci tutte le prenotazioni del ristorante
                     </p>
                 </div>
-                <Button onClick={handleAddNew}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Nuova Prenotazione
-                </Button>
+                <div ref={topButtonTriggerRef}>
+                    <Button onClick={handleAddNew}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Nuova Prenotazione
+                    </Button>
+                </div>
             </div>
 
             {/* Statistics */}
@@ -396,10 +427,11 @@ export default function ReservationsPage() {
                 onClick={handleAddNew}
                 size="lg"
                 className={cn(
-                    'fixed bottom-[calc(4rem_+_env(safe-area-inset-bottom)_+_1rem)] right-4 lg:hidden', // Hidden on large screens
+                    'fixed bottom-[calc(4rem_+_env(safe-area-inset-bottom)_+_1rem)] lg:bottom-8 right-4 lg:right-8', // Responsive positioning
                     'h-14 w-14 rounded-full shadow-lg p-0',
-                    'transition-all duration-300 hover:scale-110 active:scale-95',
-                    'z-50 bg-primary text-primary-foreground'
+                    'transition-all duration-300',
+                    'z-50 bg-primary text-primary-foreground',
+                    showFab ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-20 opacity-0 scale-75 pointer-events-none'
                 )}
             >
                 <Plus className="h-6 w-6" />
