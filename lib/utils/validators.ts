@@ -9,7 +9,7 @@ export const reservationSchema = z.object({
     date: z.date(),
     time: z.string().min(1, { message: 'Seleziona un orario' }),
     serviceType: z.enum(['lunch', 'dinner']),
-    numGuests: z.number().min(1, { message: 'Minimo 1 ospite' }).max(50, { message: 'Massimo 50 ospiti' }),
+    numGuests: z.number().min(1, { message: 'Inserisci un numero di coperti valido' }).max(50, { message: 'Massimo 50 ospiti' }),
     tableId: z.string().optional(),
     notes: z.string().optional(),
     status: z.enum(['confirmed', 'pending', 'cancelled', 'completed']).default('confirmed'),

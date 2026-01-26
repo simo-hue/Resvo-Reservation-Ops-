@@ -23,8 +23,6 @@ import {
     Area,
     BarChart,
     Bar,
-    LineChart,
-    Line,
     PieChart,
     Pie,
     Cell,
@@ -34,6 +32,7 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
+    Label,
 } from 'recharts';
 import {
     TrendingUp,
@@ -291,14 +290,20 @@ export default function StatisticsPage() {
                                                     <stop offset="95%" stopColor={COLORS.dinner} stopOpacity={0.1} />
                                                 </linearGradient>
                                             </defs>
+                                            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted/30" />
                                             <XAxis
                                                 dataKey="date"
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
                                             />
                                             <YAxis
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickFormatter={(value) => `${value}`}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend
@@ -313,6 +318,7 @@ export default function StatisticsPage() {
                                                 strokeWidth={2}
                                                 fillOpacity={1}
                                                 fill="url(#colorPranzo)"
+                                                activeDot={{ r: 6 }}
                                             />
                                             <Area
                                                 type="monotone"
@@ -322,6 +328,7 @@ export default function StatisticsPage() {
                                                 strokeWidth={2}
                                                 fillOpacity={1}
                                                 fill="url(#colorCena)"
+                                                activeDot={{ r: 6 }}
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -337,6 +344,7 @@ export default function StatisticsPage() {
                                 <CardContent>
                                     <ResponsiveContainer width="100%" height={350}>
                                         <BarChart data={weekdayData}>
+                                            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted/30" />
                                             <defs>
                                                 <linearGradient id="colorPranzoWeek" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor={COLORS.lunch} stopOpacity={0.8} />
@@ -349,14 +357,19 @@ export default function StatisticsPage() {
                                             </defs>
                                             <XAxis
                                                 dataKey="day"
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
                                             />
                                             <YAxis
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickFormatter={(value) => `${value}`}
                                             />
-                                            <Tooltip content={<CustomTooltip />} />
+                                            <Tooltip content={<CustomTooltip />} cursor={false} />
                                             <Legend
                                                 wrapperStyle={{ paddingTop: '20px' }}
                                                 iconType="circle"
@@ -365,13 +378,13 @@ export default function StatisticsPage() {
                                                 dataKey="pranzo"
                                                 name="Pranzo"
                                                 fill="url(#colorPranzoWeek)"
-                                                radius={[8, 8, 0, 0]}
+                                                radius={[4, 4, 0, 0]}
                                             />
                                             <Bar
                                                 dataKey="cena"
                                                 name="Cena"
                                                 fill="url(#colorCenaWeek)"
-                                                radius={[8, 8, 0, 0]}
+                                                radius={[4, 4, 0, 0]}
                                             />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -399,14 +412,20 @@ export default function StatisticsPage() {
                                                     <stop offset="95%" stopColor={COLORS.dinner} stopOpacity={0.1} />
                                                 </linearGradient>
                                             </defs>
+                                            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted/30" />
                                             <XAxis
                                                 dataKey="date"
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
                                             />
                                             <YAxis
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickFormatter={(value) => `${value}`}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend
@@ -421,6 +440,7 @@ export default function StatisticsPage() {
                                                 strokeWidth={2}
                                                 fillOpacity={1}
                                                 fill="url(#colorPranzoGuests)"
+                                                activeDot={{ r: 6 }}
                                             />
                                             <Area
                                                 type="monotone"
@@ -430,6 +450,7 @@ export default function StatisticsPage() {
                                                 strokeWidth={2}
                                                 fillOpacity={1}
                                                 fill="url(#colorCenaGuests)"
+                                                activeDot={{ r: 6 }}
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -451,20 +472,29 @@ export default function StatisticsPage() {
                                                     <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0.3} />
                                                 </linearGradient>
                                             </defs>
-                                            <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
+                                            <CartesianGrid horizontal={false} strokeDasharray="3 3" className="stroke-muted/30" />
+                                            <XAxis
+                                                type="number"
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                            />
                                             <YAxis
                                                 dataKey="date"
                                                 type="category"
                                                 width={80}
-                                                stroke="#64748b"
-                                                style={{ fontSize: '12px' }}
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
                                             />
-                                            <Tooltip content={<CustomTooltip />} />
+                                            <Tooltip content={<CustomTooltip />} cursor={false} />
                                             <Bar
                                                 dataKey="count"
                                                 name="Prenotazioni"
                                                 fill="url(#colorPrenotazioni)"
-                                                radius={[0, 8, 8, 0]}
+                                                radius={[0, 4, 4, 0]}
                                             />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -487,17 +517,45 @@ export default function StatisticsPage() {
                                                     data={serviceDistribution.filter(d => d.value > 0)}
                                                     cx="50%"
                                                     cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                                    innerRadius={60}
                                                     outerRadius={90}
-                                                    fill="#8884d8"
+                                                    paddingAngle={5}
+                                                    cornerRadius={5}
                                                     dataKey="value"
-                                                    strokeWidth={2}
-                                                    stroke="#fff"
+                                                    stroke="none"
                                                 >
                                                     {serviceDistribution.filter(d => d.value > 0).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                                     ))}
+                                                    <Label
+                                                        content={({ viewBox }) => {
+                                                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                                return (
+                                                                    <text
+                                                                        x={viewBox.cx}
+                                                                        y={viewBox.cy}
+                                                                        textAnchor="middle"
+                                                                        dominantBaseline="middle"
+                                                                    >
+                                                                        <tspan
+                                                                            x={viewBox.cx}
+                                                                            y={viewBox.cy}
+                                                                            className="fill-foreground text-3xl font-bold"
+                                                                        >
+                                                                            {stats.totalReservations}
+                                                                        </tspan>
+                                                                        <tspan
+                                                                            x={viewBox.cx}
+                                                                            y={(viewBox.cy || 0) + 24}
+                                                                            className="fill-muted-foreground text-xs"
+                                                                        >
+                                                                            Totali
+                                                                        </tspan>
+                                                                    </text>
+                                                                )
+                                                            }
+                                                        }}
+                                                    />
                                                 </Pie>
                                                 <Tooltip content={<CustomTooltip />} />
                                             </PieChart>
@@ -530,17 +588,45 @@ export default function StatisticsPage() {
                                                     data={statusDistribution.filter(d => d.value > 0)}
                                                     cx="50%"
                                                     cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                                    innerRadius={60}
                                                     outerRadius={90}
-                                                    fill="#8884d8"
+                                                    paddingAngle={5}
+                                                    cornerRadius={5}
                                                     dataKey="value"
-                                                    strokeWidth={2}
-                                                    stroke="#fff"
+                                                    stroke="none"
                                                 >
                                                     {statusDistribution.filter(d => d.value > 0).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                                     ))}
+                                                    <Label
+                                                        content={({ viewBox }) => {
+                                                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                                return (
+                                                                    <text
+                                                                        x={viewBox.cx}
+                                                                        y={viewBox.cy}
+                                                                        textAnchor="middle"
+                                                                        dominantBaseline="middle"
+                                                                    >
+                                                                        <tspan
+                                                                            x={viewBox.cx}
+                                                                            y={viewBox.cy}
+                                                                            className="fill-foreground text-3xl font-bold"
+                                                                        >
+                                                                            {stats.totalReservations}
+                                                                        </tspan>
+                                                                        <tspan
+                                                                            x={viewBox.cx}
+                                                                            y={(viewBox.cy || 0) + 24}
+                                                                            className="fill-muted-foreground text-xs"
+                                                                        >
+                                                                            Totali
+                                                                        </tspan>
+                                                                    </text>
+                                                                )
+                                                            }
+                                                        }}
+                                                    />
                                                 </Pie>
                                                 <Tooltip content={<CustomTooltip />} />
                                             </PieChart>

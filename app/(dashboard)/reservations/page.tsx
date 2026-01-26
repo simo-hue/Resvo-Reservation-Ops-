@@ -11,11 +11,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
-import { Plus, Search, Filter, Loader2, X, Calendar } from 'lucide-react';
+import { Plus, Search, Filter, Loader2, X } from 'lucide-react';
 import { useRestaurantSettings } from '@/lib/contexts/restaurant-settings-context';
 import { reservationsService } from '@/lib/supabase/services/reservations.service';
 import { checkIsToday, normalizeToMidnight } from '@/lib/utils/date-utils';
-import { addDays, endOfWeek, startOfWeek, isWithinInterval, endOfMonth, startOfMonth, isWeekend } from 'date-fns';
+import { addDays, endOfWeek, startOfWeek, isWithinInterval, endOfMonth, startOfMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 type DateFilterType = 'today' | 'tomorrow' | 'weekend' | 'week' | 'month' | 'all';

@@ -5,7 +5,6 @@ import { Reservation } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils/date-utils';
 import { STATUS_COLORS } from '@/lib/constants';
 import { Users, Phone, Mail, Clock, UtensilsCrossed, Edit, Trash2, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -182,7 +181,7 @@ export function ReservationCard({ reservation, onEdit, onDelete, onConfirm }: Re
                         <DialogTitle>Conferma Prenotazione</DialogTitle>
                         <DialogDescription>
                             Vuoi confermare la prenotazione di {reservation.customerName}?
-                            Lo stato passerà a "Confermata".
+                            Lo stato passerà a &quot;Confermata&quot;.
                         </DialogDescription>
                     </DialogHeader>
 

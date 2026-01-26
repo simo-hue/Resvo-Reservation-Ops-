@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { tableSchema, type TableFormData } from '@/lib/utils/validators';
 import { Table } from '@/types';
@@ -26,7 +26,7 @@ export function TableManagement() {
         handleSubmit,
         reset,
         setValue,
-        watch,
+        control,
         formState: { errors },
     } = useForm<TableFormData>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,7 +39,7 @@ export function TableManagement() {
         },
     });
 
-    const watchedPosition = watch('position');
+    const watchedPosition = useWatch({ control, name: 'position' });
 
     const handleAddTable = () => {
         setEditingTable(null);

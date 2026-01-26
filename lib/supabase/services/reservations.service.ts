@@ -105,7 +105,7 @@ export class ReservationsService {
 
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, table:tables(*)')
+            .select('*')
             .eq('restaurant_id', restaurantId)
             .gte('reservation_date', startStr)
             .lte('reservation_date', endStr)

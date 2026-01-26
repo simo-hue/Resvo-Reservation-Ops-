@@ -1,11 +1,10 @@
 'use client';
 
-import { Reservation, ServiceType } from '@/types';
+import { Reservation } from '@/types';
 import { ReservationCard } from './reservation-card';
-import { formatDate, isSameDay } from '@/lib/utils/date-utils';
-import { Card } from '@/components/ui/card';
+import { formatDate } from '@/lib/utils/date-utils';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Moon, Sun } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 
 interface ReservationListGroupedProps {
     reservations: Reservation[];

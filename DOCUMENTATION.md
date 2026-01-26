@@ -1,49 +1,29 @@
-# DOCUMENTATION
+# Implementation Documentation - Lint Fixes
 
-Professional documentation of implemented features.
+## Date: 2026-01-27
 
-## Index
-- [Booking Management](#booking-management)
+### Overview
+Addressed multiple linting errors and warnings identified during the GitHub Actions build process. The goal was to ensure the `npm run lint` command passes cleanly, allowing for successful deployments.
 
-## Booking Management
-The booking management system allows full control over reservation lifecycles.
+### Changes Implemented
 
-### New Reservation Popup (Final Design)
-The reservation form has been structured to optimize screen usage and logical flow, as per user specification:
+1.  **Unused Variables & Imports**:
+    - Removed unused imports (e.g., `Badge`, `Calendar`, `isWeekend`, `LineChart`) across several files:
+        - `app/(dashboard)/reservations/page.tsx`
+        - `app/(dashboard)/statistics/page.tsx`
+        - `components/calendar/day-view.tsx`
+        - `components/reservations/reservation-list-grouped.tsx`
+        - `components/reservations/reservation-card.tsx`
 
-**Structure:**
-1.  **Top Row (2 Columns)**:
-    *   **Left**: **Dati Cliente** (Blue). Focused on who is booking (Name, Phone, Email).
-    *   **Right**: **Stato & Note** (Amber). Focused on operational status and special requests.
-    *   This arrangement allows the user to quickly see *who* and *how* (status) at a glance.
+2.  **JSX Syntax Fixes**:
+    - Fixed unescaped double quotes in `components/reservations/reservation-card.tsx` by replacing them with the HTML entity `&quot;`.
 
-2.  **Bottom Row (Full Width)**:
-    *   **Dettagli Tavolo** (Green). Occupies the entire width of the dialog.
-    *   **Internal Layout**: Arranged in 3 columns for maximum efficiency:
-        *   Column 1: Date Selection.
-        *   Column 2: Service & Time.
-        *   Column 3: Guests & Table assignment.
+3.  **React Hook Form Refactoring**:
+    - Addressed "Compilation Skipped" warnings from React Compiler regarding `watch`.
+    - Refactored `components/reservations/reservation-form-dialog.tsx` and `components/settings/table-management.tsx` to use the `useWatch` hook instead of the `watch` method returned by `useForm`. This allows for proper memoization and better performance.
 
-**Responsive Behavior:**
-*   **Mobile (<768px)**: Only one column. Cards are stacked vertically: Customer -> Status -> Table Details.
-*   **Tablet/Desktop (>=768px)**: The 2-row layout described above activates. The dialog expands to 95vw to provide ample space.
+4.  **ESLint Directives**:
+    - Validated and consolidated `eslint-disable` directives in `components/theme-provider.tsx` to ensure they are only applied where necessary (for `react-hooks/set-state-in-effect`).
 
-### Pending Reservations
-- **Visual Indicator**: Displayed with a "In Attesa" badge (yellow).
-- **Confirm**: Click the green "Check" icon to confirm the reservation. This changes the status to "Confirmed" and moves it to the confirmed list.
-- **Reschedule**: Click the "Edit" (pencil) icon to open the dialog and change date, time, or other details.
-- **Delete**: Click the "Trash" icon to permanently delete the reservation (requires confirmation).
-
-### Confirmed Reservations
-- **Edit**: Fully editable via the "Edit" button.
-- **Delete**: Can be removed if necessary.
-
-### List Organization & Filters
-- **Grouping**: Reservations are now grouped by Date.
-- **Quick Filters**: Use the chips (Oggi, Domani, Weekend, etc.) to quickly filter by date range. Default view shows **Tutti** (All Upcoming) for ease of use.
-- **Interactive Stats**: Click on "Oggi" or "In Arrivo" cards to apply instant filters.
-- **Advanced Filters (Desktop)**: Single-row layout with Search, Service, Status and Reset.
-- **Date Filters**: Modern "Segmented Control" style, centered on the page.
-
-### Actions & Safety
-- **Confirmation**: All critical actions (Confirm, Delete) require explicit confirmation via dialog.
+### Verification
+- Executed `npm run lint` locally, which passed with 0 errors and 0 warnings.
