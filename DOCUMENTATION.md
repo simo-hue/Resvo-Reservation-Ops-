@@ -27,3 +27,19 @@ Addressed multiple linting errors and warnings identified during the GitHub Acti
 
 ### Verification
 - Executed `npm run lint` locally, which passed with 0 errors and 0 warnings.
+
+# Implementation Documentation - Reservation Popup Background Update
+
+## Date: 2026-01-27
+
+### Overview
+Updated the background color of the "Nuova Prenotazione" / "Modifica Prenotazione" dialog to be black in dark mode, removing the bluish slate tint as requested.
+
+### Changes Implemented
+1.  **Reservation Form Dialog**:
+    - Modified `components/reservations/reservation-form-dialog.tsx`:
+        - Changed `DialogContent` background from `dark:bg-slate-950` to `dark:bg-black`.
+        - Changed the sticky footer background from `dark:bg-slate-950` to `dark:bg-black`.
+
+### Verification
+- Visual inspection should confirm a pure black background in dark mode for the reservation popup.

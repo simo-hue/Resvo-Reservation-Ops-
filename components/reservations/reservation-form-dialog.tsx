@@ -141,7 +141,7 @@ export function ReservationFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[95vw] max-w-[92vw] h-[85vh] p-0 gap-0 flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
+            <DialogContent className="w-[95vw] max-w-[92vw] h-[85vh] p-0 gap-0 flex flex-col bg-slate-50 dark:bg-black overflow-hidden">
                 <DialogHeader className="px-6 py-4 border-b bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shrink-0">
                     <DialogTitle className="text-xl font-bold text-primary">
                         {reservation?.id ? 'Modifica Prenotazione' : 'Nuova Prenotazione'}
@@ -411,7 +411,7 @@ export function ReservationFormDialog({
                     </div>
 
                     {/* STICKY FOOTER ACTIONS */}
-                    <div className="p-4 border-t bg-white dark:bg-slate-950 flex justify-end gap-3 shrink-0">
+                    <div className="p-4 border-t bg-white dark:bg-black flex justify-end gap-3 shrink-0">
                         <Button type="button" variant="outline" size="default" onClick={() => onOpenChange(false)}>
                             Annulla
                         </Button>
