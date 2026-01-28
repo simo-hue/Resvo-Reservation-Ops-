@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { isSameDay, checkIsToday } from '@/lib/utils/date-utils';
 import { getReservationsForDateAndService } from '@/lib/utils/capacity-calculator';
 import { Badge } from '@/components/ui/badge';
+import { Users } from 'lucide-react';
 
 interface DayCellProps {
     date: Date;
@@ -81,38 +82,47 @@ export function DayCell({
             )}
         >
             <div className="flex flex-col h-full justify-between gap-1">
-                {/* Date number - always visible */}
-                <div className="flex items-start justify-center sm:justify-between w-full">
+                {/* Header: Date (Left) and Reservation Count (Right) */}
+                <div className="flex items-start justify-between w-full">
+                    {/* Date Number */}
                     <span
                         className={cn(
-                            'text-xs sm:text-sm md:text-base font-semibold leading-none',
-                            isToday && 'bg-primary text-primary-foreground rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center text-xs sm:text-sm'
+                            'text-xs sm:text-sm md:text-base font-semibold leading-none flex items-center justify-center',
+                            isToday
+                                ? 'bg-primary text-primary-foreground rounded-full h-6 w-6'
+                                : 'text-foreground'
                         )}
                     >
                         {date.getDate()}
                     </span>
+
+                    {/* Reservation Count - Top Right Badge */}
+                    {currentMonth && (
+                        <Badge
+                            variant="secondary"
+                            className={cn(
+                                "h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-[10px] font-bold shadow-sm",
+                                dayReservations.length > 0 ? "bg-primary/10 text-primary border-primary/20" : "opacity-50"
+                            )}
+                        >
+                            {dayReservations.length}
+                        </Badge>
+                    )}
                 </div>
 
-                {/* Stats - always visible for current month */}
+                {/* Content: Covers and Capacity */}
                 {currentMonth && (
-                    <div className="flex flex-col gap-0.5">
-                        <div className="flex justify-between items-center text-[10px] sm:text-xs text-muted-foreground">
-                            <span className="hidden sm:inline">Pren:</span>
-                            <span className="sm:hidden">P:</span>
-                            <span className="font-medium text-foreground">{dayReservations.length}</span>
+                    <div className="space-y-1.5 mt-auto">
+                        {/* Covers Count */}
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                            <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            <span className="text-[10px] sm:text-xs font-medium">
+                                {totalGuests}
+                            </span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] sm:text-xs text-muted-foreground">
-                            <span className="hidden sm:inline">Cop:</span>
-                            <span className="sm:hidden">C:</span>
-                            <span className="font-medium text-foreground">{totalGuests}</span>
-                        </div>
-                    </div>
-                )}
 
-                {/* Capacity info - always visible for current month */}
-                {currentMonth && (
-                    <div className="space-y-1 mt-auto">
-                        <div className="w-full bg-background/50 rounded-full h-1 sm:h-1.5 overflow-hidden">
+                        {/* Capacity Bar */}
+                        <div className="w-full bg-secondary/50 rounded-full h-1 sm:h-1.5 overflow-hidden">
                             <div
                                 className={cn(
                                     'h-full transition-all duration-300',

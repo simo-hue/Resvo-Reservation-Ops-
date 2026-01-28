@@ -93,15 +93,16 @@ Enhanced the Monthly Calendar view (`DayCell` component) to explicitly display t
 
 ### Changes Implemented
 1.  **DayCell Component (`components/calendar/day-cell.tsx`)**:
-    -   Removed the conditional check `dayReservations.length > 0` for displaying metrics. Now, stats are shown for all days in the current month.
-    -   Changed the layout to explicitly show labels:
-        -   **Desktop/Tablet**: "Pren: X", "Cop: Y".
-        -   **Mobile**: Compact abbreviations "P: X", "C: Y".
-    -   Increased the fixed height of the cells (e.g., from 56px to 85px on mobile, and up to 110px on desktop) to accommodate the additional text while maintaining readability.
-    -   Kept the capacity progress bar always visible at the bottom of the cell.
+    -   **Layout**: Switched to a cleaner flex layout.
+    -   **Reservations**: Moved to the top-right corner as a badge. Removed text labels ("Pren"/"P"). Styled as a minimal number badge.
+    -   **Covers**: Moved to bottom-left, using a `Users` icon from Lucide React to substitute the text label ("Cop"/"C").
+    -   **Capacity**: Kept the progress bar at the bottom.
+    -   **Visuals**: Improved spacing and alignment for a more professional look.
 
 ### Verification
 -   **Manual**:
-    -   Visually verify that every cell in the Monthly view (for the active month) shows "Pren:" and "Cop:" counts, even if they are 0.
-    -   Verify responsiveness: Resize to mobile width and check if "Pren"/"Cop" changes to "P"/"C" and fits within the cell.
-    -   Verify that clicking a cell still selects the day correctly.
+    -   Check the Monthly Calendar view.
+    -   Verify top-left: Date number.
+    -   Verify top-right: Reservation count (number only, inside a badge).
+    -   Verify bottom-left: Users icon + number (Covers).
+    -   Verify responsiveness on mobile.
