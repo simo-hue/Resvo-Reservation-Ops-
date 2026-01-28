@@ -42,20 +42,16 @@ export function DayCell({
 
     // Determine capacity color using dynamic thresholds
     let capacityColor = 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800';
-    let dotColor = 'bg-green-500';
     let barColor = 'bg-green-500';
 
     if (percentage > orangeThreshold) {
         capacityColor = 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800';
-        dotColor = 'bg-red-500';
         barColor = 'bg-red-500';
     } else if (percentage >= yellowThreshold) {
         capacityColor = 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800';
-        dotColor = 'bg-orange-500';
         barColor = 'bg-orange-500';
     } else if (percentage >= greenThreshold) {
         capacityColor = 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800';
-        dotColor = 'bg-yellow-500';
         barColor = 'bg-yellow-500';
     }
 
@@ -67,7 +63,8 @@ export function DayCell({
             onClick={currentMonth ? onClick : undefined}
             className={cn(
                 // Fixed height: uniform on all screens
-                'h-[56px] sm:h-[80px] md:h-[100px]',
+                // Fixed height: uniform on all screens
+                'h-[85px] sm:h-[100px] md:h-[110px]',
                 // Responsive padding
                 'p-1.5 sm:p-2 md:p-3',
                 // Border and radius
@@ -83,9 +80,9 @@ export function DayCell({
                 currentMonth && capacityColor
             )}
         >
-            <div className="flex flex-col h-full justify-between">
-                {/* Date number and badge - always visible */}
-                <div className="flex items-start justify-between gap-1">
+            <div className="flex flex-col h-full justify-between gap-1">
+                {/* Date number - always visible */}
+                <div className="flex items-start justify-center sm:justify-between w-full">
                     <span
                         className={cn(
                             'text-xs sm:text-sm md:text-base font-semibold leading-none',
@@ -94,27 +91,28 @@ export function DayCell({
                     >
                         {date.getDate()}
                     </span>
-
-                    {/* Reservation indicator - mobile: dot, desktop: badge */}
-                    {currentMonth && dayReservations.length > 0 && (
-                        <>
-                            {/* Mobile: simple dot */}
-                            <div className={cn('h-2 w-2 rounded-full sm:hidden', dotColor)} />
-                            {/* Desktop: badge with count */}
-                            <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
-                                {dayReservations.length}
-                            </Badge>
-                        </>
-                    )}
                 </div>
 
-                {/* Capacity info - only on larger screens */}
-                {currentMonth && dayReservations.length > 0 && (
-                    <div className="hidden sm:block space-y-1">
-                        <div className="text-xs text-muted-foreground">
-                            {totalGuests}/{maxCapacity}
+                {/* Stats - always visible for current month */}
+                {currentMonth && (
+                    <div className="flex flex-col gap-0.5">
+                        <div className="flex justify-between items-center text-[10px] sm:text-xs text-muted-foreground">
+                            <span className="hidden sm:inline">Pren:</span>
+                            <span className="sm:hidden">P:</span>
+                            <span className="font-medium text-foreground">{dayReservations.length}</span>
                         </div>
-                        <div className="w-full bg-background/50 rounded-full h-1.5 overflow-hidden">
+                        <div className="flex justify-between items-center text-[10px] sm:text-xs text-muted-foreground">
+                            <span className="hidden sm:inline">Cop:</span>
+                            <span className="sm:hidden">C:</span>
+                            <span className="font-medium text-foreground">{totalGuests}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Capacity info - always visible for current month */}
+                {currentMonth && (
+                    <div className="space-y-1 mt-auto">
+                        <div className="w-full bg-background/50 rounded-full h-1 sm:h-1.5 overflow-hidden">
                             <div
                                 className={cn(
                                     'h-full transition-all duration-300',

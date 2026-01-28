@@ -62,3 +62,46 @@ Implemented the ability to accept/confirm pending reservations directly from the
 
 ### Verification
 -   **Manual Test**: Navigate to Day View, find a pending reservation, click the check icon, confirm the dialog, and verify the status update.
+
+# Implementation Documentation - Calendar Monthly View Indicators Restoration
+
+## Date: 2026-01-28
+
+### Overview
+Restored the visual indicators for the number of covers and reservations in the monthly calendar view. These indicators were previously hidden on mobile/smaller screens, causing a regression where users could not see critical information. With this update, the indicators are visible on all screen sizes, with a compact design for mobile.
+
+### Changes Implemented
+1.  **DayCell Component (`components/calendar/day-cell.tsx`)**:
+    -   Removed `hidden sm:inline-flex` and `hidden sm:block` classes that were hiding the reservation badge and capacity bar on mobile.
+    -   Implemented a responsive design:
+        -   **Badge**: On smaller screens (`sm`), the badge is compacted (smaller padding, smaller font) to fit within the cell.
+        -   **Capacity Info**: The text (e.g., "12/100") and progress bar are now always visible. Text size is adjusted for mobile.
+    -   Cleaned up unused `dotColor` variable as the "dot" indicator was replaced by the full badge.
+
+### Verification
+-   **Automated**: `npm run lint` passed successfully.
+-   **Manual**: 
+    -   Check the Monthly Calendar view on Desktop: Indicators should remain visible and styled as before.
+    -   Check the Monthly Calendar view on Mobile (resize window): Indicators (Badge and Capacity Bar) should now be visible, replacing the previous simple dot.
+
+# Implementation Documentation - Calendar Metrics Enhancement
+
+## Date: 2026-01-28 (Update)
+
+### Overview
+Enhanced the Monthly Calendar view (`DayCell` component) to explicitly display the number of reservations ("Pren") and covers ("Cop") for every day, regardless of whether there are reservations or not. This addresses the user requirement to see these metrics in every cell, similar to the Weekly view.
+
+### Changes Implemented
+1.  **DayCell Component (`components/calendar/day-cell.tsx`)**:
+    -   Removed the conditional check `dayReservations.length > 0` for displaying metrics. Now, stats are shown for all days in the current month.
+    -   Changed the layout to explicitly show labels:
+        -   **Desktop/Tablet**: "Pren: X", "Cop: Y".
+        -   **Mobile**: Compact abbreviations "P: X", "C: Y".
+    -   Increased the fixed height of the cells (e.g., from 56px to 85px on mobile, and up to 110px on desktop) to accommodate the additional text while maintaining readability.
+    -   Kept the capacity progress bar always visible at the bottom of the cell.
+
+### Verification
+-   **Manual**:
+    -   Visually verify that every cell in the Monthly view (for the active month) shows "Pren:" and "Cop:" counts, even if they are 0.
+    -   Verify responsiveness: Resize to mobile width and check if "Pren"/"Cop" changes to "P"/"C" and fits within the cell.
+    -   Verify that clicking a cell still selects the day correctly.
