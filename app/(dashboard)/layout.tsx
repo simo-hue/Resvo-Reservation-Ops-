@@ -16,7 +16,7 @@ export default function DashboardLayout({
 
     return (
         <RestaurantSettingsProvider>
-            <div className="min-h-screen bg-background">
+            <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
                 {/* Desktop sidebar */}
                 <Sidebar />
 
@@ -24,11 +24,12 @@ export default function DashboardLayout({
                 <MobileNav isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
                 <BottomNav />
 
-                {/* Main content */}
-                <div className="lg:pl-64 pb-32 lg:pb-0 safe-area-top">
+                {/* Main content wrapper */}
+                <div className="flex-1 flex flex-col lg:pl-64 min-w-0 min-h-0 safe-area-top">
                     <Header onMobileMenuToggle={() => setMobileMenuOpen(true)} />
 
-                    <main className="p-4 lg:p-6">
+                    {/* Scrollable Main Area */}
+                    <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-6 relative w-full touch-pan-y scroller-mobile-fix">
                         {children}
                     </main>
                 </div>

@@ -120,3 +120,11 @@ Fixed an issue where the calendar month view was invalidating vertical scrolling
 
 ### Verification
 -   **Manual**: Open the calendar on a mobile device and verify that you can scroll down the page by dragging on the calendar grid.
+
+### Fix PWA Daily View Layout
+- [2026-03-28 14:40:00]: UI Bug Fix on PWA Daily View Layout
+  - *Details*: Fixed a major issue on iOS Safari / PWA standalone mode where the bottom navigation bar and the 'Add reservation' float button would disappear when scrolling through a day with heavily populated reservations.
+  - *Tech Notes*: 
+    - Migrated `app/(dashboard)/layout.tsx` to use a rigorous container layout (`h-[100dvh] overflow-hidden`) rather than `min-h-screen`. 
+    - Forced the scrolling strictly into the `<main>` structural inner container. 
+    - Added the `.scroller-mobile-fix` CSS class in `globals.css` specifying `overscroll-behavior-y: contain` to provide native feeling touches without dragging away the root frame mapping.

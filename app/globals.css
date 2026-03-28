@@ -265,4 +265,10 @@
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
   }
+
+  /* Scroller fix for iOS PWA to contain bounce */
+  .scroller-mobile-fix {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
 }
