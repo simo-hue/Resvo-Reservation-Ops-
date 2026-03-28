@@ -217,9 +217,10 @@
     scroll-behavior: smooth;
   }
 
-  /* Optimize tap highlight */
+  /* Optimize tap highlight and avoid 300ms delay */
   * {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   /* Mobile viewport height fix */

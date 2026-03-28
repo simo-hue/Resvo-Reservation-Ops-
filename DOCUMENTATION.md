@@ -128,3 +128,13 @@ Fixed an issue where the calendar month view was invalidating vertical scrolling
     - Migrated `app/(dashboard)/layout.tsx` to use a rigorous container layout (`h-[100dvh] overflow-hidden`) rather than `min-h-screen`. 
     - Forced the scrolling strictly into the `<main>` structural inner container. 
     - Added the `.scroller-mobile-fix` CSS class in `globals.css` specifying `overscroll-behavior-y: contain` to provide native feeling touches without dragging away the root frame mapping.
+
+### Form Reservation PWA Dialog Mobile optimization
+- [2026-03-28 14:46:00]: Reservation Form Dialog mobile optimization
+  - *Details*: Modals were poorly dimensioned on iOS standalone PWA which caused overlaps and inaccessible buttons when the virtual keyboard was open. Now the modal spans 100dvh natively on mobile, and adds padding matching the iOS Home Indicator.
+  - *Tech Notes*: Migrated Fixed Component Modal inside `ReservationFormDialog` to `h-[100dvh]` dynamically handling mobile viewport, alongside `pb-[max(1rem,env(safe-area-inset-bottom))]` applied on the sticky footer to safely bump action buttons above the iOS notch/home indicator space.
+
+### Accessibility PWA Tap Delay fix
+- [2026-03-28 14:46:15]: Safari global tap delay prevention
+  - *Details*: Added a quick fix to eradicate the native Safari 300ms gesture tap wait delay across buttons.
+  - *Tech Notes*: Injected a global ruleset with `touch-action: manipulation;` inside `globals.css` to enable instantaneous UI response without latency.
